@@ -525,6 +525,27 @@
             <button id="closeAppPanel" type="button" aria-label="Cerrar">×</button>
         </div>
 
+        <!-- Cuenta y sincronización. Todo esto lo rellena y lo maneja nube.js;
+             si no hay nube configurada, se queda en "solo en este aparato". -->
+        <div class="custom-section">
+            <h4>Mis notas en la nube</h4>
+
+            <p class="cuenta-estado" id="cuentaEstado">Solo en este aparato</p>
+
+            <form class="cuenta-form" id="cuentaForm" hidden>
+                <input id="cuentaCorreo" type="email" autocomplete="email" inputmode="email"
+                       placeholder="tu@correo.com" aria-label="Tu correo" required>
+                <button type="submit" id="cuentaEntrar">Enviar enlace</button>
+            </form>
+
+            <div class="cuenta-acciones" id="cuentaAcciones" hidden>
+                <button type="button" id="cuentaSincronizar">↻ Sincronizar ahora</button>
+                <button type="button" id="cuentaSalir">Cerrar sesión</button>
+            </div>
+
+            <p class="custom-hint" id="cuentaPista">Escribe tu correo y te llega un enlace para entrar. No hay contraseña que recordar.</p>
+        </div>
+
         <div class="custom-section">
             <h4>Paleta</h4>
             <!-- Las genera renderPalettes() -->
@@ -735,6 +756,8 @@
     </form>
 </dialog>
 
+<script src="config.js"></script>
 <script src="script.js"></script>
+<script src="nube.js"></script>
 </body>
 </html>

@@ -1161,7 +1161,9 @@ input:focus-visible,
 /* El fondo crema de los campos está fijo, así que en oscuro quedaba texto claro
    sobre un campo casi blanco (1.4 de contraste, ilegible). */
 .dark-mode .new-note-form input,
-.dark-mode .new-note-form select {
+.dark-mode .new-note-form select,
+.dark-mode .app-name-input,
+.dark-mode .cuenta-form input {
     background: rgba(255, 255, 255, 0.10);
 }
 
@@ -3832,6 +3834,169 @@ button.calendar-day.is-selected:hover {
     font: inherit;
     font-size: 0.875rem;
 }
+
+/* CUENTA EN LA NUBE */
+
+.cuenta-estado {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    margin-bottom: 9px;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.8125rem;
+
+    /* --muted a secas se queda en 4.10 de contraste, y esto es texto de 13px:
+       se acerca al color de lectura sin dejar de verse como algo secundario. */
+    color: color-mix(in srgb, var(--muted) 45%, var(--text));
+}
+
+/* El punto de delante hace de semáforo: apagado, verde o rojo. El texto dice
+   lo mismo, así que quien no distinga los colores no se pierde nada. */
+.cuenta-estado::before {
+    content: "";
+
+    flex-shrink: 0;
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: currentColor;
+
+    opacity: 0.45;
+}
+
+.cuenta-estado.cuenta-bien {
+    color: var(--text);
+}
+
+.cuenta-estado.cuenta-bien::before {
+    background: #2F7D4F;
+
+    opacity: 1;
+}
+
+.cuenta-estado.cuenta-mal {
+    color: #A3352B;
+}
+
+.cuenta-estado.cuenta-mal::before {
+    background: #A3352B;
+
+    opacity: 1;
+}
+
+.dark-mode .cuenta-estado.cuenta-bien::before {
+    background: #7FCB9B;
+}
+
+.dark-mode .cuenta-estado.cuenta-mal,
+.dark-mode .cuenta-estado.cuenta-mal::before {
+    color: #FFA79C;
+
+    background: #FFA79C;
+}
+
+.dark-mode .cuenta-estado.cuenta-mal {
+    background: none;
+}
+
+.cuenta-form {
+    display: flex;
+
+    gap: 7px;
+}
+
+.cuenta-form input {
+    flex: 1;
+
+    /* Sin esto el campo no baja de su ancho natural y desborda el panel */
+    min-width: 0;
+
+    height: 38px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    padding: 0 10px;
+
+    background: rgba(255, 249, 238, 0.78);
+
+    color: var(--text);
+
+    font: inherit;
+    font-size: 0.875rem;
+}
+
+.cuenta-form button {
+    flex-shrink: 0;
+
+    height: 38px;
+
+    border-radius: 7px;
+
+    padding: 0 12px;
+
+    background: var(--cta, var(--coral));
+
+    color: var(--cta-text, var(--white));
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+}
+
+.cuenta-form button:hover {
+    background: var(--cta-hover, var(--coral));
+}
+
+.cuenta-form button:disabled {
+    opacity: 0.6;
+
+    cursor: default;
+}
+
+.cuenta-acciones {
+    display: flex;
+
+    gap: 7px;
+}
+
+.cuenta-acciones button {
+    flex: 1;
+
+    min-width: 0;
+
+    height: 34px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: var(--background);
+
+    color: var(--text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+}
+
+.cuenta-acciones button:hover {
+    background: color-mix(in srgb, var(--coral) 14%, var(--background));
+}
+
+.custom-hint.cuenta-mal {
+    color: #A3352B;
+}
+
+.dark-mode .custom-hint.cuenta-mal {
+    color: #FFA79C;
+}
+
 
 /* Capa transparente para poder cerrar tocando fuera de la hoja. No atenúa nada:
    la idea es seguir viendo la nota tal cual mientras se personaliza. */

@@ -18,6 +18,8 @@ frameworks, sin dependencias y sin ningún paso de compilación. Se abre el
 - Tachuelas, clips y cinta adhesiva para sujetar las notas al tablero, con
   balanceo al pasar el ratón y al deslizar en el móvil.
 - Modo claro y oscuro, y diseño adaptado al móvil.
+- Cuenta propia y sincronización entre el ordenador y el móvil, sin depender de
+  estar en la misma red.
 
 ## Cómo se ejecuta
 
@@ -32,6 +34,8 @@ puerto 5504 (ya configurado en `.vscode/settings.json`), o abriendo el
 | `index.html`           | Toda la estructura de la página                      |
 | `style.css`            | Estilos, incluidos los temas y la vista móvil        |
 | `script.js`            | Toda la lógica                                       |
+| `config.js`            | Dirección y clave pública del proyecto de Supabase   |
+| `nube.js`              | La cuenta y la sincronización                        |
 | `img/`                 | Logo, favicon y las pegatinas recortadas             |
 | `basedatos/`           | Esquema SQL para Supabase                            |
 | `logo/`                | Pruebas iniciales del logo                           |
@@ -39,9 +43,25 @@ puerto 5504 (ya configurado en `.vscode/settings.json`), o abriendo el
 
 ## Dónde se guardan los datos
 
-Hoy, en el almacenamiento del propio navegador, así que cada aparato tiene sus
-notas. En `basedatos/esquema.sql` está el esquema para Supabase con el que
-pasarán a estar en la nube y sincronizadas entre el ordenador y el móvil.
+En el almacenamiento del propio navegador, siempre. La página escribe ahí
+primero y funciona igual sin internet.
 
-El botón de descarga de la barra superior exporta todo en un JSON, que sirve
-tanto de copia de seguridad como de mudanza a esa base de datos.
+Si además se entra con el correo, ese mismo cuaderno se copia a Supabase y se
+sincroniza con los demás aparatos. Los detalles están comentados arriba del
+todo en `nube.js`, pero en resumen:
+
+- La entrada es por enlace al correo, sin contraseña.
+- Cada aparato guarda una huella corta de cada nota para saber qué cambió aquí
+  desde la última subida, sin tener que duplicar el cuaderno entero.
+- Lo borrado se sube marcado como borrado, no se quita la fila: si se quitara,
+  el otro aparato no se enteraría y la nota reaparecería.
+- Si la misma nota se editó en dos sitios, gana la más reciente.
+- Un aparato que estrena la cuenta descarta sus notas de ejemplo, para no
+  mezclarlas con el cuaderno de verdad.
+
+La clave que hay en `config.js` es pública a propósito: lo que protege los
+datos son las reglas de `basedatos/esquema.sql`, que sin haber entrado con el
+correo no dejan leer ni escribir nada.
+
+El botón de descarga de la barra superior sigue exportando todo en un JSON,
+como copia de seguridad aparte.

@@ -495,6 +495,7 @@ function loadCategories() {
 
 function persistCategories() {
     localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
+    avisarNube();
 }
 
 function findCategory(id) {
@@ -560,7 +561,12 @@ function seedNotes() {
         archived: false,
         deleted: false,
         customization: { ...DEFAULT_CUSTOMIZATION, ...seed.customization },
-        updatedAt: dateFrom(seed.daysAgo)
+        updatedAt: dateFrom(seed.daysAgo),
+        // Marca de "esto lo puso la página, no ella". Sirve al entrar en la
+        // cuenta desde un aparato nuevo: estas notas de muestra se descartan
+        // para no mezclarlas con el cuaderno de verdad. tocarNota() borra la
+        // marca en cuanto se edita la nota, y entonces ya no se descarta.
+        semilla: true
     }));
 }
 
@@ -627,17 +633,34 @@ function loadReminders() {
     }
 }
 
+// Sella la nota como recién tocada por ella. De paso deja de ser una nota de
+// ejemplo: las de ejemplo se descartan al entrar en la cuenta desde un aparato
+// nuevo, y lo que ella haya escrito no debe irse con ellas.
+function tocarNota(note) {
+    note.updatedAt = new Date().toISOString();
+    delete note.semilla;
+}
+
+// Le dice a la nube (nube.js) que algo cambió aquí. Si no hay nube cargada, no
+// pasa nada: la página funciona igual guardando solo en este aparato.
+function avisarNube() {
+    if (window.Cuadernito && window.Cuadernito.alCambiar) window.Cuadernito.alCambiar();
+}
+
 function persistReminders() {
     localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
+    avisarNube();
 }
 
 function persistNotes() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
     saveStatus.textContent = "✓ Guardado";
+    avisarNube();
 }
 
 function persistSettings() {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    avisarNube();
 }
 
 function formatDate(dateString) {
@@ -843,7 +866,7 @@ function setNoteCategory(categoryId) {
     const note = getActiveNote();
     if (!note) return;
     note.categoryId = categoryId || null;
-    note.updatedAt = new Date().toISOString();
+    tocarNota(note);
     persistNotes();
     renderCards();
     renderEditor();
@@ -1603,7 +1626,7 @@ function saveCustomization({ closePanel = true } = {}) {
     const note = getActiveNote();
     if (!note) return;
     note.customization = { ...customizationDraft };
-    note.updatedAt = new Date().toISOString();
+    tocarNota(note);
     customizationDirty = false;
     persistNotes();
     renderCards();
@@ -1674,7 +1697,7 @@ function saveActiveNote() {
     if (!note) return;
     note.title = editorTitle.textContent.trim() || "Sin título";
     note.content = editorContent.innerHTML;
-    note.updatedAt = new Date().toISOString();
+    tocarNota(note);
     saveStatus.textContent = "Guardando...";
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
@@ -1689,7 +1712,7 @@ function saveNoteNow() {
     clearTimeout(saveTimer);
     note.title = editorTitle.textContent.trim() || "Sin título";
     note.content = sanitizeNoteHtml(editorContent.innerHTML);
-    note.updatedAt = new Date().toISOString();
+    tocarNota(note);
     saveStatus.textContent = "Guardando...";
     persistNotes();
     renderCards();
@@ -1773,7 +1796,7 @@ function toggleFavorite(noteId) {
     const note = notes.find((item) => item.id === noteId);
     if (!note) return;
     note.favorite = !note.favorite;
-    note.updatedAt = new Date().toISOString();
+    tocarNota(note);
     persistNotes();
     renderCards();
     renderEditor();
@@ -2826,3 +2849,59 @@ colocarGraduador();
 anchoMovil.addEventListener("change", colocarGraduador);
 renderCards();
 renderEditor();
+
+
+/* =====================================================
+   PUENTE CON LA NUBE
+
+   notes, categories, reminders y settings se declaran con let: no viven en
+   window, así que nube.js no puede verlas ni reemplazarlas por su cuenta.
+   Este objeto es la única puerta entre las dos partes, y así el resto del
+   archivo no se entera de que existe una nube.
+===================================================== */
+
+window.Cuadernito = {
+
+    tablas: () => ({ notas: notes, categorias: categories, recordatorios: reminders }),
+
+    ajustes: () => settings,
+
+    // Por aquí entra lo que llega de la nube. Solo se toca lo que venga:
+    // reemplazar({ notas }) no pisa las categorías ni los recordatorios.
+    reemplazar(cambios) {
+        if (Array.isArray(cambios.notas)) notes = cambios.notas.map(migrateNote);
+        if (Array.isArray(cambios.categorias)) categories = cambios.categorias;
+        if (Array.isArray(cambios.recordatorios)) reminders = cambios.recordatorios;
+        if (cambios.ajustes && typeof cambios.ajustes === "object") settings = cambios.ajustes;
+
+        // La nota que estaba abierta puede haberse borrado en el otro aparato
+        if (!notes.some((note) => note.id === activeNoteId && !note.deleted)) {
+            activeNoteId = notes.find((note) => !note.deleted)?.id || null;
+        }
+
+        persistNotes();
+        persistCategories();
+        persistReminders();
+        persistSettings();
+
+        applySettings();
+        renderCategories();
+        renderFilterPicker();
+        renderCalendar();
+        renderReminders();
+        renderCounts();
+        renderCards();
+
+        // Si está escribiendo en este momento, repintar el editor le movería
+        // el cursor a otro sitio a media frase. Lo que llegó ya está guardado
+        // y se verá en cuanto cierre la nota.
+        const escribiendo = document.activeElement && document.activeElement.closest
+            && document.activeElement.closest(".editor");
+        if (!escribiendo) renderEditor();
+    },
+
+    // Vuelve del enlace del correo: que vea en qué quedó la cosa
+    abrirCuenta() {
+        openAppPanel();
+    }
+};
