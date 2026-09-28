@@ -1,0 +1,22 @@
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editores
+.idea/
+*.code-workspace
+
+# Dependencias (por si en el futuro se añade tooling)
+node_modules/
+
+# Copias de seguridad manuales previas a git
+_backup/
+
+# Servicios de publicación
+.netlify/
+.vercel/
+
+# Claves y datos locales (la clave `anon` de Supabase no va aqui: es publica)
+.env
+.env.*

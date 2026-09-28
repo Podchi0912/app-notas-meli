@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cuadernito</title>
+
+    <link rel="icon" type="image/png" href="img/favicon-64.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Handlee&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <!-- Nube de fondo: círculos superpuestos con el mismo relleno, que
+                 se funden en una sola silueta. Toma el color de --logo-halo. -->
+            <!-- Nube redonda y sutil: sigue la forma circular del logo. Dieciséis
+                 bultos pequeños y muy solapados sobre un cuerpo central, de modo
+                 que el contorno ondula de forma fina y queda casi al ras del
+                 logo. Con menos bultos y más grandes parecía una flor. -->
+            <svg class="logo-cloud" viewBox="0 0 230 230" aria-hidden="true" focusable="false">
+                <g fill="currentColor">
+                    <circle cx="115" cy="115" r="100"/>
+                    <circle cx="199" cy="115" r="26"/>
+                    <circle cx="193" cy="147" r="24"/>
+                    <circle cx="174" cy="174" r="27"/>
+                    <circle cx="147" cy="193" r="25"/>
+                    <circle cx="115" cy="199" r="26"/>
+                    <circle cx="83" cy="193" r="24"/>
+                    <circle cx="56" cy="174" r="27"/>
+                    <circle cx="37" cy="147" r="25"/>
+                    <circle cx="31" cy="115" r="26"/>
+                    <circle cx="37" cy="83" r="24"/>
+                    <circle cx="56" cy="56" r="27"/>
+                    <circle cx="83" cy="37" r="25"/>
+                    <circle cx="115" cy="31" r="26"/>
+                    <circle cx="147" cy="37" r="24"/>
+                    <circle cx="174" cy="56" r="27"/>
+                    <circle cx="193" cy="83" r="25"/>
+                </g>
+            </svg>
+
+            <img class="logo-image" src="img/logo-400.png" alt="Mi Cuadernito" width="198" height="198" decoding="async">
+        </div>
+
+        <button class="new-button">
+            <span>＋</span>
+            Crear nuevo
+        </button>
+
+        <nav class="main-nav">
+
+            <!-- Los contadores los rellena renderCounts() -->
+
+            <a class="nav-item active" href="#" data-filter="all">
+                <span class="nav-icon">▣</span>
+                <span class="nav-label">Todas las notas</span>
+                <span class="nav-count" data-count="all"></span>
+            </a>
+
+            <a class="nav-item" href="#" data-filter="favorites">
+                <span class="nav-icon">♡</span>
+                <span class="nav-label">Favoritas</span>
+                <span class="nav-count" data-count="favorites"></span>
+            </a>
+
+            <a class="nav-item" href="#" data-filter="nota">
+                <span class="nav-icon">▧</span>
+                <span class="nav-label">Notas</span>
+                <span class="nav-count" data-count="nota"></span>
+            </a>
+
+            <a class="nav-item" href="#" data-filter="lista">
+                <span class="nav-icon">☷</span>
+                <span class="nav-label">Listas</span>
+                <span class="nav-count" data-count="lista"></span>
+            </a>
+
+            <a class="nav-item" href="#" data-filter="receta">
+                <span class="nav-icon">♨</span>
+                <span class="nav-label">Recetas</span>
+                <span class="nav-count" data-count="receta"></span>
+            </a>
+
+            <a class="nav-item" href="#" data-filter="idea">
+                <span class="nav-icon">♧</span>
+                <span class="nav-label">Ideas</span>
+                <span class="nav-count" data-count="idea"></span>
+            </a>
+
+            <a class="nav-item" href="#" data-filter="plan">
+                <span class="nav-icon">▣</span>
+                <span class="nav-label">Planes</span>
+                <span class="nav-count" data-count="plan"></span>
+            </a>
+
+            <a class="nav-item" href="#" data-filter="archived">
+                <span class="nav-icon">□</span>
+                <span class="nav-label">Archivo</span>
+                <span class="nav-count" data-count="archived"></span>
+            </a>
+
+            <a class="nav-item" href="#" data-filter="trash">
+                <span class="nav-icon">♧</span>
+                <span class="nav-label">Papelera</span>
+                <span class="nav-count" data-count="trash"></span>
+            </a>
+
+        </nav>
+
+        <div class="category-title">
+            <span>CATEGORÍAS</span>
+            <button id="addCategory" type="button" aria-label="Nueva categoría" title="Nueva categoría">＋</button>
+        </div>
+
+        <!-- Sirve para crear y para editar; lo abre ＋ o el ✎ de cada fila -->
+        <form class="category-form" id="categoryForm" hidden>
+
+            <div class="category-form-row">
+                <input id="categoryIcon" type="text" maxlength="2" placeholder="🏷" aria-label="Emoji de la categoría">
+                <input id="categoryName" type="text" maxlength="20" placeholder="Nombre" required aria-label="Nombre de la categoría">
+            </div>
+
+            <!-- Los puntos de color los genera renderCategoryDots() -->
+            <div class="category-dots" id="categoryDots"></div>
+
+            <div class="category-form-actions">
+                <button type="button" id="cancelCategory">Cancelar</button>
+                <button type="submit" id="saveCategory">Crear</button>
+            </div>
+
+        </form>
+
+        <!-- Las filas las genera renderCategories() -->
+        <div class="categories" id="categoriesList"></div>
+
+        <button class="customize-sidebar">
+            ⚙
+            Personalizar mi cuaderno
+        </button>
+
+    </aside>
+
+
+    <!-- ================= MAIN AREA ================= -->
+
+    <main class="main">
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div class="search">
+                <input id="searchInput" type="search" placeholder="Buscar en mis notas..." aria-label="Buscar en mis notas">
+                <strong>⌕</strong>
+            </div>
+
+            <!-- Solo en móvil, donde no cabe la navegación del sidebar. Era un
+                 <select>: el desplegable nativo lo pinta el sistema, no cabía
+                 bien y escondía las categorías en un grupo sin rótulo. -->
+            <div class="filter-field">
+
+                <button type="button" id="mobileFilter" aria-haspopup="true"
+                        aria-expanded="false" aria-controls="filterPicker">
+                    <span id="filterLabel">Todas las notas</span>
+                    <span class="filter-caret" aria-hidden="true">⌄</span>
+                </button>
+
+                <!-- Los dos grupos los genera renderFilterPicker() -->
+                <div class="filter-picker" id="filterPicker" hidden>
+                    <p class="picker-label">Ver</p>
+                    <div class="chip-options" id="filterViews" role="radiogroup" aria-label="Ver"></div>
+                    <p class="picker-label">Categorías</p>
+                    <div class="chip-options" id="filterCategories" role="radiogroup" aria-label="Categorías"></div>
+                </div>
+
+            </div>
+
+            <div class="top-actions">
+
+                <div class="font-scale" role="group" aria-label="Tamaño de letra de la aplicación">
+                    <button id="scaleDown" type="button" aria-label="Reducir tamaño de letra" title="Reducir tamaño de letra">A−</button>
+                    <button id="fontScaleValue" type="button" aria-label="Restablecer tamaño de letra al 100%" title="Restablecer al 100%">100%</button>
+                    <button id="scaleUp" type="button" aria-label="Aumentar tamaño de letra" title="Aumentar tamaño de letra">A+</button>
+                </div>
+
+                <button id="exportNotes" class="icon-button" type="button" aria-label="Descargar copia de mis notas" title="Descargar copia de mis notas (.json)">⇩</button>
+                <button id="themeToggle" class="icon-button" type="button" aria-label="Cambiar a modo oscuro" title="Modo oscuro">
+
+                    <!-- Luna en modo claro (pulsa para oscurecer) -->
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M20.7 14.9A8.7 8.7 0 0 1 9.1 3.3 8.7 8.7 0 1 0 20.7 14.9Z" fill="currentColor"/>
+                        <circle cx="17.6" cy="5.4" r="1.5" fill="currentColor" opacity=".6"/>
+                        <circle cx="21" cy="9.2" r="1" fill="currentColor" opacity=".42"/>
+                    </svg>
+
+                    <!-- Sol en modo oscuro (pulsa para aclarar) -->
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.7" fill="currentColor"/>
+                        <g stroke="currentColor" stroke-width="2.1" stroke-linecap="round">
+                            <path d="M12 2.4v2.3M12 19.3v2.3M2.4 12h2.3M19.3 12h2.3"/>
+                            <path d="M5.3 5.3 6.9 6.9M17.1 17.1l1.6 1.6M18.7 5.3 17.1 6.9M6.9 17.1l-1.6 1.6"/>
+                        </g>
+                    </svg>
+
+                </button>
+                <button id="openCustomize" class="icon-button" type="button"
+                        aria-label="Personalizar mi cuaderno" title="Personalizar mi cuaderno">
+
+                    <!-- Paleta de pintor. Los lunares toman los colores reales
+                         de la app, así que el icono cambia con la paleta. -->
+                    <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3c-4.9 0-8.9 3.6-8.9 8s4 8 8.9 8c.83 0 1.5-.63 1.5-1.4 0-.36-.15-.7-.4-1-.22-.28-.4-.6-.4-.97 0-.78.67-1.4 1.5-1.4h1.8c2.8 0 5-2.2 5-5C21 6.2 17 3 12 3Z"
+                              fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.5"/>
+                        <circle cx="7.3" cy="9.4" r="1.55" fill="var(--sidebar)"/>
+                        <circle cx="11.5" cy="6.6" r="1.55" fill="var(--coral)"/>
+                        <circle cx="15.9" cy="8.3" r="1.55" fill="var(--plum)"/>
+                        <circle cx="6.9" cy="14" r="1.55" fill="var(--pink)"/>
+                    </svg>
+
+                </button>
+
+                <div class="avatar" id="avatarInitial">M</div>
+
+            </div>
+
+        </header>
+
+
+        <!-- WELCOME -->
+
+        <section class="welcome">
+
+            <h1>
+                ¡Hola, <span id="greetingName">Melissa</span>! <span>♡</span>
+            </h1>
+
+            <p>¿Qué quieres crear hoy?</p>
+
+        </section>
+
+
+        <!-- CREATE CARDS -->
+
+        <section class="create-grid">
+
+            <div class="create-card" data-create-type="nota">
+                <div class="create-icon note">✎</div>
+                <span>Nueva</span>
+                <strong>nota</strong>
+            </div>
+
+            <div class="create-card" data-create-type="lista">
+                <div class="create-icon list">☑</div>
+                <span>Nueva</span>
+                <strong>lista</strong>
+            </div>
+
+            <div class="create-card" data-create-type="receta">
+                <div class="create-icon recipe">♨</div>
+                <span>Nueva</span>
+                <strong>receta</strong>
+            </div>
+
+            <div class="create-card" data-create-type="idea">
+                <div class="create-icon idea">♧</div>
+                <span>Nueva</span>
+                <strong>idea</strong>
+            </div>
+
+            <div class="create-card" data-create-type="plan">
+                <div class="create-icon plan">▦</div>
+                <span>Nuevo</span>
+                <strong>plan</strong>
+            </div>
+
+        </section>
+
+
+        <!-- RECENT NOTES -->
+
+        <section class="recent-section">
+
+            <div class="section-heading">
+                <h2 id="recentHeading">Recientes</h2>
+                <button id="showAllButton">Ver todas</button>
+            </div>
+
+
+            <!-- Las tarjetas las genera renderCards() en script.js -->
+            <div class="notes-grid" id="notesGrid"></div>
+
+        </section>
+
+
+        <!-- BOTTOM PANELS -->
+
+        <section class="bottom-panels">
+
+            <div class="panel calendar-panel">
+
+                <div class="calendar-header">
+
+                    <button id="calendarPrev" type="button" aria-label="Mes anterior">‹</button>
+
+                    <span id="calendarLabel">—</span>
+
+                    <button id="calendarNext" type="button" aria-label="Mes siguiente">›</button>
+
+                </div>
+
+                <div class="calendar-weekdays" aria-hidden="true">
+                    <span>L</span>
+                    <span>M</span>
+                    <span>X</span>
+                    <span>J</span>
+                    <span>V</span>
+                    <span>S</span>
+                    <span>D</span>
+                </div>
+
+                <!-- Los días los pinta renderCalendar() -->
+                <div class="calendar-grid" id="calendarGrid"></div>
+
+                <div class="calendar-footer">
+                    <span id="calendarHint">Los días con punto tienen notas</span>
+                    <button type="button" id="calendarClear" hidden>Quitar filtro</button>
+                </div>
+
+            </div>
+
+
+            <!-- CUSTOMIZATION PANEL -->
+
+            <div class="panel reminders-panel">
+
+                <div class="reminders-title">
+                    <span aria-hidden="true">☑</span>
+                    Recordatorios
+                    <em id="remindersDate">—</em>
+                </div>
+
+                <!-- La lista la pinta renderReminders() según el día del calendario -->
+                <div class="reminders-list" id="remindersList"></div>
+
+                <!-- Solo en móvil: el formulario arranca plegado detrás de este
+                     botón. Desplegado se lleva 180px en lo alto de la página. -->
+                <button type="button" class="solo-movil reminder-add" id="toggleReminderForm">＋ Añadir recordatorio</button>
+
+                <form class="reminder-form" id="reminderForm">
+
+                    <div class="reminder-fields">
+                        <input type="time" id="reminderTime" aria-label="Hora (opcional)">
+                        <input type="text" id="reminderText" placeholder="Nuevo recordatorio..." maxlength="120" required aria-label="Texto del recordatorio">
+                    </div>
+
+                    <!-- Los colores los genera renderReminderColors() desde COLOR_VALUES -->
+                    <div class="reminder-colors" id="reminderColors" role="radiogroup" aria-label="Color del recordatorio"></div>
+
+                    <div class="reminder-form-actions">
+                        <button type="button" id="reminderCancel" hidden>Cancelar</button>
+                        <button type="submit" id="reminderSubmit">Añadir</button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= NOTE EDITOR ================= -->
+
+    <section class="editor is-hidden">
+
+        <header class="editor-header">
+
+            <div class="editor-title">
+
+                <button class="back" id="closeEditor" aria-label="Cerrar editor">←</button>
+
+                <span class="favorite-star">☆</span>
+
+                <strong id="editorTitle" contenteditable="true" spellcheck="true">
+                    Pasta con tomate cherry 🍅
+                </strong>
+
+            </div>
+
+            <div class="saved" id="saveStatus" role="button" tabindex="0" title="Guardar nota" aria-label="Guardar nota">
+                Guardar
+            </div>
+
+        </header>
+
+
+        <!-- TOOLBAR -->
+
+        <div class="toolbar">
+
+            <button type="button" data-command="undo">↶</button>
+            <button type="button" data-command="redo">↷</button>
+
+            <span class="toolbar-divider"></span>
+
+            <button type="button" class="bold" data-command="bold">T</button>
+            <button type="button" class="italic" data-command="italic">I</button>
+            <button type="button" class="underline" data-command="underline">U</button>
+
+            <span class="toolbar-divider"></span>
+
+            <button type="button" data-command="insertUnorderedList" aria-label="Lista de puntos" title="Lista de puntos">☰</button>
+            <button type="button" data-command="insertOrderedList" aria-label="Lista numerada" title="Lista numerada">≡</button>
+
+            <span class="toolbar-divider"></span>
+
+            <button type="button" class="strike" data-command="strikeThrough" aria-label="Tachado" title="Tachado">S</button>
+            <button type="button" data-command="removeFormat" aria-label="Quitar formato" title="Quitar formato">⌫</button>
+
+            <button id="toggleEmojis" type="button" aria-expanded="false" aria-controls="emojiGrid"
+                    aria-label="Insertar emoji" title="Insertar emoji">🌸</button>
+
+            <!-- El icono lo rellena renderDecorationSvgs() con el capibara -->
+            <button id="toggleStickers" type="button" aria-expanded="false" aria-controls="stickerGrid"
+                    data-drawn="capybara" aria-label="Insertar pegatina" title="Pegatinas" hidden></button>
+
+            <button id="openCustomizeMenu" type="button" aria-label="Abrir personalización" title="Abrir personalización">•••</button>
+
+        </div>
+
+
+        <!-- NOTE PAPER -->
+
+        <article class="paper">
+
+            <div class="paper-holes">
+
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+
+            <!-- El contenido lo inyecta renderEditor() desde la nota activa -->
+            <div class="paper-content" id="editorContent" contenteditable="true" spellcheck="true"></div>
+
+            <!-- Fuera de #editorContent: si estuviera dentro, renderEditor() la
+                 borraría en el primer render. La rellena renderPaperPattern()
+                 repartiendo la decoración por toda la hoja. -->
+            <div class="paper-pattern" id="paperPattern" aria-hidden="true"></div>
+
+            <!-- Las pegatinas colocadas en esta nota. Cada una guarda su sitio,
+                 tamaño y giro; la capa no intercepta el ratón, solo ellas. -->
+            <div class="sticker-layer" id="stickerLayer"></div>
+
+            <!-- Panel flotante al pie de la nota. La rejilla la genera
+                 renderEmojis(); va dentro de .paper para quedar por encima del
+                 texto pero sin tapar el pie del editor. -->
+            <div class="emoji-popover" id="emojiGrid" hidden></div>
+
+            <!-- Las pegatinas las genera renderStickers() desde STICKERS -->
+            <div class="emoji-popover sticker-popover" id="stickerGrid" hidden></div>
+
+        </article>
+
+
+        <!-- NOTE FOOTER -->
+
+        <div class="editor-footer">
+
+            <span class="editor-type">
+                ♨ Recetas
+            </span>
+
+            <!-- Panel propio y no un <select>: el desplegable nativo lo pinta el
+                 sistema y no admite estilos. Sube, porque el pie está abajo. -->
+            <div class="category-field">
+                <button type="button" class="editor-category" id="editorCategory"
+                        aria-haspopup="true" aria-expanded="false" aria-controls="categoryPicker">Sin categoría</button>
+                <!-- Las pastillas las genera renderEditorCategory() -->
+                <div class="category-picker chip-options" id="categoryPicker" role="radiogroup"
+                     aria-label="Categoría de la nota" hidden></div>
+            </div>
+
+            <span id="editorDate">
+                Hoy 12:30
+            </span>
+
+            <button id="editorFavorite" aria-label="Marcar favorita" title="Marcar como favorita">♡</button>
+            <button id="editorDelete" aria-label="Enviar a papelera" title="Enviar a papelera">🗑</button>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= CUSTOMIZE EDITOR ================= -->
+
+    <!-- Fondo atenuado de la hoja inferior; solo visible en móvil -->
+    <div class="sheet-backdrop" id="sheetBackdrop"></div>
+
+
+    <!-- ============ PERSONALIZAR LA APP (no la nota) ============ -->
+
+    <aside class="float-panel app-panel" id="appPanel">
+
+        <div class="customize-header">
+            <h3>Personalizar mi cuaderno</h3>
+            <button id="closeAppPanel" type="button" aria-label="Cerrar">×</button>
+        </div>
+
+        <div class="custom-section">
+            <h4>Paleta</h4>
+            <!-- Las genera renderPalettes() -->
+            <div class="palette-options" id="paletteOptions"></div>
+            <p class="custom-hint">Seis combinaciones comprobadas: todas mantienen el texto legible.</p>
+        </div>
+
+        <div class="custom-section">
+            <h4>Forma de los paneles</h4>
+            <!-- Las genera renderShapes() -->
+            <div class="style-options vertical" id="shapeOptions"></div>
+        </div>
+
+        <!-- Solo en móvil: colocarGraduador() trae aquí el control .font-scale
+             de la barra superior, donde competía con acciones más frecuentes. -->
+        <div class="custom-section solo-movil" id="panelFontSection">
+            <h4>Tamaño de la letra</h4>
+            <div id="panelFontSlot"></div>
+            <p class="custom-hint">Afecta a toda la página, no al tamaño de cada nota.</p>
+        </div>
+
+        <div class="custom-section">
+            <h4>Tu nombre</h4>
+            <input class="app-name-input" id="userName" type="text" maxlength="24"
+                   placeholder="Melissa" aria-label="Tu nombre">
+            <p class="custom-hint">Aparece en el saludo y en la inicial de arriba.</p>
+        </div>
+
+    </aside>
+
+    <aside class="float-panel note-panel" id="notePanel">
+
+        <div class="customize-header">
+
+            <h3>Personalizar nota</h3>
+
+            <button id="closeCustomize" aria-label="Cerrar personalización">×</button>
+
+        </div>
+
+
+        <div class="custom-section">
+
+            <h4>Color</h4>
+
+            <!-- Las muestras las genera renderNoteColors() desde COLOR_VALUES,
+                 para no repetir la paleta también en el CSS -->
+            <div class="color-options large" id="noteColors"></div>
+
+        </div>
+
+
+        <div class="custom-section">
+
+            <h4>Fondo</h4>
+
+            <div class="background-options large">
+
+                <button class="background plain" data-background="plain" aria-label="Fondo liso"></button>
+                <button class="background lines" data-background="lines" aria-label="Fondo de líneas"></button>
+                <button class="background dots" data-background="dots" aria-label="Fondo de puntos"></button>
+                <button class="background grid" data-background="grid" aria-label="Fondo de cuadrícula"></button>
+                <button class="background flowers" data-background="flowers" aria-label="Fondo floral">✿</button>
+                <button class="background checks" data-background="checks" aria-label="Fondo de cuadros"></button>
+                <button class="background diagonal" data-background="diagonal" aria-label="Fondo de rombos"></button>
+                <button class="background waves" data-background="waves" aria-label="Fondo de ondas"></button>
+                <button class="background clouds" data-background="clouds" aria-label="Fondo de nubes"></button>
+
+            </div>
+
+        </div>
+
+
+        <div class="custom-section">
+
+            <h4>Estilo</h4>
+
+            <div class="style-options vertical">
+
+                    <button class="selected" data-style="paper">Papel</button>
+                    <button data-style="post-it">Post-it</button>
+                    <button data-style="card">Tarjeta</button>
+                    <button data-style="journal">Diario</button>
+
+            </div>
+
+        </div>
+
+
+        <div class="custom-section">
+
+            <h4>Decoraciones</h4>
+
+            <div class="decorations-row">
+
+                <div class="decorations">
+
+                    <button id="heartDecoration" data-decoration="❤️" aria-label="Corazones, elegir color"
+                            title="Corazones — pulsa para elegir color"
+                            aria-expanded="false" aria-controls="heartPicker">❤️</button>
+                    <button data-decoration="🍓" aria-label="Fresas" title="Fresas">🍓</button>
+                    <button data-decoration="⭐" aria-label="Estrellas" title="Estrellas">⭐</button>
+                    <button data-decoration="☁️" aria-label="Nubes" title="Nubes">☁️</button>
+                    <button data-decoration="✈️" aria-label="Aviones" title="Aviones">✈️</button>
+                    <button data-decoration="🌸" aria-label="Flores" title="Flores">🌸</button>
+                    <button data-decoration="🥦" aria-label="Brócoli" title="Brócoli">🥦</button>
+                    <!-- Los dibujados (calabaza y capibara) los rellena
+                         renderDecorationSvgs() desde DECORATION_SVG: así el
+                         botón y lo que se pinta en la nota no pueden divergir. -->
+                    <button data-decoration="pumpkin" aria-label="Calabazas" title="Calabazas"></button>
+                    <button data-decoration="🥕" aria-label="Zanahorias" title="Zanahorias">🥕</button>
+                    <button data-decoration="🦋" aria-label="Mariposas" title="Mariposas">🦋</button>
+                    <button data-decoration="bear" aria-label="Ositos" title="Ositos"></button>
+                    <button data-decoration="capybara" aria-label="Capibaras" title="Capibaras"></button>
+                    <button data-decoration="capybara-sit" aria-label="Capibaras sentados" title="Capibaras sentados"></button>
+                    <button data-decoration="capybara-loaf" aria-label="Capibaras con mandarina" title="Capibaras con mandarina"></button>
+
+                </div>
+
+                <!-- Panel flotante con los colores de corazón -->
+                <div class="heart-picker" id="heartPicker" hidden>
+                    <button data-decoration="❤️" aria-label="Corazón rojo">❤️</button>
+                    <button data-decoration="🧡" aria-label="Corazón naranja">🧡</button>
+                    <button data-decoration="💛" aria-label="Corazón amarillo">💛</button>
+                    <button data-decoration="💚" aria-label="Corazón verde">💚</button>
+                    <button data-decoration="💙" aria-label="Corazón azul">💙</button>
+                    <button data-decoration="💜" aria-label="Corazón morado">💜</button>
+                    <button data-decoration="🤎" aria-label="Corazón marrón">🤎</button>
+                    <button data-decoration="🖤" aria-label="Corazón negro">🖤</button>
+                    <button data-decoration="🤍" aria-label="Corazón blanco">🤍</button>
+                    <button data-decoration="💗" aria-label="Corazón rosa">💗</button>
+                    <button data-decoration="💖" aria-label="Corazón brillante">💖</button>
+                    <button data-decoration="💞" aria-label="Corazones girando">💞</button>
+                </div>
+
+            </div>
+
+            <p class="custom-hint">Se reparten por toda la nota, detrás del texto.</p>
+
+        </div>
+
+
+        <div class="custom-section">
+
+            <h4>Fuente</h4>
+
+            <button class="font-selector" id="fontSelector" type="button">
+                <span>Aa</span>
+                <span id="fontName">Fuente principal</span>
+                <span>⌄</span>
+            </button>
+
+        </div>
+
+
+        <div class="custom-section">
+
+            <h4>Tamaño</h4>
+
+            <div class="font-size">
+
+                <button id="decreaseFont" type="button">−</button>
+                <span id="fontSizeValue">16</span>
+                <button id="increaseFont" type="button">＋</button>
+
+            </div>
+
+            <p class="custom-hint">Solo cambia esta nota al abrirla. En Recientes se ve con el tamaño general de la app.</p>
+
+        </div>
+
+
+        <button class="apply-button" id="applyCustomize" type="button">
+            Aplicar cambios
+        </button>
+
+    </aside>
+
+</div>
+
+<!-- Se abre al pulsar la tachuela, el clip o la cinta de una nota de
+     Recientes. El contenido lo genera renderFastenerPicker(). -->
+<div class="fastener-picker" id="fastenerPicker" role="dialog" aria-label="Sujeción de la nota" hidden>
+    <p class="picker-label">Sujetar con</p>
+    <div class="fastener-types" id="fastenerTypes"></div>
+    <p class="picker-label">Color</p>
+    <div class="fastener-colors" id="fastenerColors"></div>
+    <p class="fastener-hint">Arrástrala para ponerla donde quieras.</p>
+    <button type="button" class="fastener-reset" id="fastenerReset" hidden>↺ Devolver a su sitio</button>
+</div>
+
+<dialog id="newNoteDialog">
+    <form method="dialog" class="new-note-form">
+        <h3 id="newNoteHeading">Nueva nota</h3>
+        <span class="form-label">Tipo</span>
+        <!-- Los botones los genera renderNoteTypes() desde NOTE_TYPES -->
+        <div class="type-options" id="newNoteTypes" role="radiogroup" aria-label="Tipo de nota"></div>
+        <label for="newNoteTitle">Título</label>
+        <input id="newNoteTitle" type="text" required maxlength="120">
+        <span class="form-label">Categoría</span>
+        <!-- Pastillas y no un <select>: el desplegable nativo lo pinta el
+             sistema (blanco, ajeno a la paleta) y no admite estilos. -->
+        <div class="chip-options" id="newNoteCategories" role="radiogroup" aria-label="Categoría de la nota"></div>
+        <div class="dialog-actions">
+            <button type="button" id="cancelNoteButton" value="cancel">Cancelar</button>
+            <button type="submit" id="createNoteButton" value="create">Crear</button>
+        </div>
+    </form>
+</dialog>
+
+<script src="script.js"></script>
+</body>
+</html>

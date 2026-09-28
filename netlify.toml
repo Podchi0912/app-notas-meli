@@ -1,0 +1,6 @@
+# La app es HTML, CSS y JS sin compilar: no hay nada que construir, se publica
+# la carpeta tal cual. Se deja escrito para que Netlify no intente adivinarlo
+# y crea que es un proyecto con framework.
+[build]
+  publish = "."
+  command = ""

@@ -1,0 +1,4906 @@
+/* =====================================================
+   MI CUADERNITO
+   PALETA
+===================================================== */
+
+:root {
+
+    --plum: #713E5A;
+    --brown: #4B4237;
+    --cream: #EDC79B;
+    --coral: #D57A66;
+    --pink: #CA6680;
+
+    /* Cremas cálidos, nunca blanco. El fondo va algo más profundo que el papel
+       para que las tarjetas se despeguen del lienzo y para acompañar al burdeos
+       del sidebar (separación 6.5). */
+    --background: #F5E6D7;
+    --paper: #FCF3E4;
+    --white: #FFFFFF;
+
+    /* Sidebar en burdeos. El logo es arte oscuro sobre fondo transparente, así
+       que no puede apoyarse directamente sobre un color oscuro (sobre el
+       ciruela original quedaba a ~1.5:1). En vez de aclarar todo el sidebar, el
+       logo lleva su propio halo crema: así el panel puede ser profundo y el
+       logo destaca más que nunca. */
+    --sidebar: #79403F;
+    --sidebar-text: #F8E8DF;
+    --sidebar-soft: #E0B2A4;
+    --sidebar-hover: rgba(255, 255, 255, 0.13);
+    --sidebar-line: rgba(255, 255, 255, 0.17);
+    --sidebar-dot-line: rgba(255, 255, 255, 0.28);
+    --sidebar-shadow: 0 10px 30px rgba(75, 66, 55, 0.18);
+    --logo-halo: #FBEFE3;
+
+    --text: #3F302B;
+    --muted: #8B7167;
+
+    --border: rgba(75, 66, 55, 0.12);
+
+    --shadow:
+        0 8px 25px rgba(75, 66, 55, 0.08);
+
+    --radius: 14px;
+}
+
+
+/* =====================================================
+   RESET
+===================================================== */
+
+/* Toda la tipografía de la app está en rem, así que basta con mover el tamaño
+   raíz para graduarla entera. El 100% parte del tamaño configurado en el
+   navegador, de modo que se respeta la preferencia de accesibilidad del sistema
+   y --font-scale la multiplica. */
+html {
+    font-size: calc(100% * var(--font-scale, 1));
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body,
+body * {
+    font-family: "Handlee", cursive !important;
+}
+
+body {
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    background: var(--background);
+    color: var(--text);
+
+    min-height: 100vh;
+}
+
+button {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+}
+
+/* El foco solo se oculta para el ratón: con teclado siempre debe verse. */
+button:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* El `display: none` que el navegador da a [hidden] lo pisa cualquier regla que
+   fije un display, y basta con un `.toolbar button { display: flex }` para que
+   un elemento oculto se siga viendo. Con !important el atributo manda siempre.
+   Por eso varios paneles llevaban su propia regla `[hidden]`: ya no hace falta. */
+[hidden] {
+    display: none !important;
+}
+
+/* Secciones que solo existen en la vista móvil; el @media de abajo las muestra */
+.solo-movil {
+    display: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible,
+[contenteditable]:focus-visible {
+    outline: 2px solid var(--coral);
+    outline-offset: 2px;
+}
+
+
+/* =====================================================
+   ENTRADA DE LOS PANELES
+===================================================== */
+
+/* Los paneles flotantes aparecen subiendo y ganando opacidad.
+   La curva importa más que la duración: con una salida muy pronunciada el panel
+   recorre el 96% del camino en la primera mitad y se percibe como un parpadeo,
+   no como movimiento. Esta reparte el recorrido de forma mucho más pareja. */
+@keyframes panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(26px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Flotación continua: los paneles suben y bajan unos pocos píxeles, muy
+   despacio. Las duraciones son distintas a propósito para que no se muevan
+   todos a la vez, que es lo que delataría el truco. */
+@keyframes panel-float {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(var(--flotacion, -7px));
+    }
+}
+
+/* La entrada usa relleno `backwards`, no `both`: con `both` se quedaría fija
+   al terminar y bloquearía la flotación, que anima la misma propiedad. La
+   flotación arranca con un retardo igual a la entrada, así se turnan. */
+.sidebar,
+.editor:not(.is-hidden),
+.float-panel.is-open {
+    animation:
+        panel-in 0.5s cubic-bezier(0.25, 0.55, 0.35, 1) backwards,
+        panel-float 3.4s 0.5s ease-in-out infinite alternate;
+}
+
+/* El editor flota menos y más despacio: es donde se escribe, y un recorrido
+   mayor haría bailar el texto bajo el cursor. */
+.editor:not(.is-hidden) {
+    --flotacion: -4px;
+    animation-duration: 0.5s, 4.6s;
+}
+
+.float-panel.is-open {
+    --flotacion: -6px;
+    animation-duration: 0.5s, 3.9s;
+}
+
+.emoji-popover:not([hidden]),
+.heart-picker:not([hidden]) {
+    animation: panel-in 0.5s cubic-bezier(0.25, 0.55, 0.35, 1) backwards;
+}
+
+/* Las ventanitas salen de su botón: entran más rápido y no flotan, porque son
+   pasajeras y moverlas mientras eliges un emoji estorbaría. */
+.emoji-popover:not([hidden]),
+.heart-picker:not([hidden]) {
+    animation-duration: 0.32s;
+    transform-origin: top center;
+}
+
+/* El de categorías nace abajo y sube, así que se origina en su parte inferior */
+.category-picker:not([hidden]) {
+    animation: panel-in 0.32s cubic-bezier(0.25, 0.55, 0.35, 1) backwards;
+    transform-origin: bottom center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .editor:not(.is-hidden),
+    .float-panel.is-open,
+    .emoji-popover:not([hidden]),
+    .heart-picker:not([hidden]),
+    .category-picker:not([hidden]) {
+        animation: none;
+    }
+}
+
+
+/* =====================================================
+   APP
+===================================================== */
+
+/* La tercera columna solo existe con el editor abierto. Antes se declaraba
+   siempre y, como .editor nace con is-hidden (display:none), el track seguía
+   ahí: un tercio de pantalla en blanco al cargar. */
+
+.app {
+    min-height: 100vh;
+
+    display: grid;
+
+    grid-template-columns:
+        240px
+        minmax(500px, 1fr);
+
+    /* Antes había un degradado con el ancho del sidebar fijo a 218px. Las media
+       queries lo reducen a 200/190/170px, así que sobraba una franja morada
+       pintada encima del contenido. El .sidebar ya cubre su columna entera. */
+    background: var(--background);
+}
+
+.app.editor-open {
+    grid-template-columns:
+        240px
+        minmax(500px, 1fr)
+        minmax(458px, 0.9fr);
+}
+
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+/* Panel flotante: se despega de los bordes y se queda fijo al desplazar.
+   align-self: start es lo que evita que el grid lo estire a toda la fila, que
+   es requisito para que position: sticky tenga efecto. */
+.sidebar {
+    position: sticky;
+    top: 14px;
+    align-self: start;
+
+    height: calc(100vh - 28px);
+
+    margin: 14px;
+
+    background: var(--sidebar);
+
+    color: var(--sidebar-text);
+
+    border: 1px solid var(--sidebar-line);
+    border-radius: var(--panel-radius, 22px);
+
+    box-shadow: var(--sidebar-shadow);
+
+    padding: 22px 10px 16px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: auto;
+}
+
+/* Con la altura del panel acotada, los hijos flex se encogían para caber
+   (el logo y el botón salían aplastados). Que conserven su tamaño y sea el
+   panel el que se desplace. */
+.sidebar > * {
+    flex-shrink: 0;
+}
+
+
+/* LOGO */
+
+.logo {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 18px;
+}
+
+/* La nube es lo que permite que el logo se lea sobre el burdeos: es su fondo
+   claro. Va detrás de la imagen y no intercepta clics. */
+.logo-cloud {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 100%;
+    height: auto;
+
+    color: var(--logo-halo);
+
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.10));
+
+    pointer-events: none;
+}
+
+.logo-image {
+    position: relative;
+    display: block;
+    /* Casi tan grande como la nube: esta solo asoma como un borde ondulado */
+    width: 90%;
+    max-width: 172px;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: contain;
+}
+
+/* Se eliminaron .logo-script/.logo-name/.logo-small/.logo-heart/.logo-star y su
+   animación: el sidebar solo contiene <img class="logo-image">, ese marcado
+   nunca existió. */
+
+
+/* NEW BUTTON */
+
+.new-button {
+    width: 100%;
+
+    height: 39px;
+
+    /* Los da applyAppTheme() a partir de la paleta activa; los valores de aquí
+       solo cubren el instante antes de que corra el script. */
+    background: var(--cta, #E0A08F);
+
+    color: var(--cta-text, #54261C);
+
+    border-radius: 7px;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.875rem;
+
+    margin-bottom: 22px;
+
+    transition: 0.2s;
+}
+
+.new-button:hover {
+    transform: translateY(-2px);
+
+    background: var(--cta-hover, #E9B3A5);
+}
+
+
+/* NAV */
+
+.main-nav {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+.nav-item {
+    /* Altura fija: con min-height, a escalas altas el texto se partía en dos
+       líneas y el ítem pasaba de 37 a 66px, deformando todo el sidebar. */
+    height: 37px;
+
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 5px 14px;
+
+    border-radius: 7px;
+
+    color: var(--sidebar-text);
+
+    text-decoration: none;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.875rem;
+
+    cursor: pointer;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background: var(--sidebar-hover);
+}
+
+.nav-icon {
+    width: 16px;
+
+    text-align: center;
+
+    font-size: 1.0625rem;
+}
+
+/* Absorbe el espacio sobrante y se recorta con puntos suspensivos en vez de
+   partirse en dos líneas. */
+.nav-label {
+    flex: 1;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+/* Contador por filtro; antes vivía en el panel de Categorías, que duplicaba
+   esta misma navegación. */
+.nav-count {
+    margin-left: auto;
+
+    flex-shrink: 0;
+
+    min-width: 16px;
+
+    text-align: right;
+
+    font-size: 0.6875rem;
+
+    opacity: 0.7;
+}
+
+
+/* CATEGORIES */
+
+.category-title {
+    border-top:
+        1px solid
+        var(--sidebar-line);
+
+    margin-top: 15px;
+
+    padding:
+        18px 15px 8px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    color: var(--sidebar-soft);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.6875rem;
+
+    letter-spacing: 1px;
+}
+
+.category-title button {
+    color: var(--sidebar-text);
+
+    background: transparent;
+
+    font-size: 1.125rem;
+}
+
+.categories {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    padding: 0 15px;
+}
+
+/* Fila = el botón que filtra + las herramientas (✎ ×). Altura fija, igual que
+   .nav-item: a escalas de letra grandes el nombre se recorta en vez de partir
+   la fila en dos y descuadrar el sidebar. */
+.category {
+    position: relative;
+
+    height: 26px;
+
+    display: flex;
+
+    align-items: center;
+
+    border-radius: 7px;
+
+    color: var(--sidebar-text);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.75rem;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+}
+
+.category:hover,
+.category.active {
+    background: var(--sidebar-hover);
+}
+
+.category-pick {
+    flex: 1;
+
+    min-width: 0;
+
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 0 7px;
+
+    background: transparent;
+
+    color: inherit;
+
+    font: inherit;
+
+    text-align: left;
+}
+
+.category-name {
+    flex: 1;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+.category-count {
+    flex-shrink: 0;
+
+    font-size: 0.6875rem;
+
+    opacity: 0.7;
+}
+
+/* Flotan sobre el final de la fila en vez de ocupar sitio: el sidebar es
+   estrecho y, reservándoles hueco, los nombres se quedaban en "✈️ V...".
+   El degradado las despega del texto que puedan tapar al aparecer. */
+.category-tools {
+    position: absolute;
+
+    top: 0;
+    right: 0;
+
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    padding: 0 4px 0 14px;
+
+    background:
+        linear-gradient(
+            to right,
+            transparent,
+            var(--sidebar) 14px);
+
+    opacity: 0;
+
+    transition: opacity 0.15s;
+}
+
+.category:hover .category-tools,
+.category:focus-within .category-tools {
+    opacity: 1;
+}
+
+.category-tools button {
+    width: 20px;
+    height: 20px;
+
+    border-radius: 5px;
+
+    background: transparent;
+
+    color: var(--sidebar-soft);
+
+    font-size: 0.8125rem;
+
+    line-height: 1;
+}
+
+.category-tools button:hover {
+    background: var(--sidebar-hover);
+
+    color: var(--sidebar-text);
+}
+
+.category-empty {
+    margin: 0;
+
+    color: var(--sidebar-soft);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.6875rem;
+
+    line-height: 1.5;
+
+    white-space: normal;
+}
+
+
+/* ALTA Y EDICIÓN DE CATEGORÍAS */
+
+.category-form {
+    display: grid;
+
+    /* minmax(0, 1fr) y no 1fr a secas: por defecto una columna de rejilla no
+       baja del contenido mínimo de sus hijos, y el campo del nombre (que trae
+       un ancho propio de ~128px) estiraba el formulario fuera del sidebar. */
+    grid-template-columns: minmax(0, 1fr);
+
+    gap: 8px;
+
+    margin: 0 12px 10px;
+
+    padding: 9px;
+
+    border: 1px solid var(--sidebar-line);
+    border-radius: 9px;
+
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.category-form[hidden] {
+    display: none;
+}
+
+.category-form > * {
+    min-width: 0;
+}
+
+.category-form-row {
+    display: flex;
+
+    gap: 6px;
+}
+
+.category-form input {
+    min-width: 0;
+
+    border: 1px solid var(--sidebar-line);
+    border-radius: 6px;
+
+    padding: 6px 8px;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    color: var(--sidebar-text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+}
+
+.category-form input::placeholder {
+    color: var(--sidebar-soft);
+}
+
+#categoryIcon {
+    width: 38px;
+
+    flex-shrink: 0;
+
+    padding-left: 4px;
+    padding-right: 4px;
+
+    text-align: center;
+}
+
+#categoryName {
+    flex: 1;
+}
+
+/* Envuelve: el sidebar es estrecho y seis puntos en fila lo desbordaban, lo
+   que le sacaba una barra de scroll horizontal a toda la barra. */
+.category-dots {
+    display: flex;
+
+    /* Los seis caben justos en una fila; el wrap queda de red por si la escala
+       de letra crece y el sidebar se estrecha en proporción. */
+    flex-wrap: wrap;
+
+    gap: 4px;
+}
+
+/* El punto es .category-dot y aquí además es botón: hay que darle tamaño de
+   diana sin romper el círculo. */
+.category-dots button {
+    width: 15px;
+    height: 15px;
+
+    padding: 0;
+}
+
+.category-dots button.selected {
+    outline: 2px solid var(--sidebar-text);
+
+    outline-offset: 1px;
+}
+
+.category-form-actions {
+    display: flex;
+
+    gap: 6px;
+}
+
+.category-form-actions button {
+    flex: 1;
+
+    /* Sin esto un botón nunca baja de lo que mide su palabra ("Cancelar") y el
+       par se sale del sidebar. */
+    min-width: 0;
+
+    border-radius: 6px;
+
+    padding: 6px;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    color: var(--sidebar-text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+}
+
+.category-form-actions button[type="submit"] {
+    background: var(--cta, #E0A08F);
+
+    color: var(--cta-text, #54261C);
+}
+
+.category-dot {
+    width: 11px;
+    height: 11px;
+
+    border-radius: 50%;
+
+    /* Sin borde, los puntos claros se perdían sobre el sidebar */
+    border: 1px solid var(--sidebar-dot-line);
+
+    display: inline-block;
+
+    flex-shrink: 0;
+}
+
+.blue {
+    background: #A9D4D2;
+}
+
+.cream {
+    background: #E8D9C9;
+}
+
+.yellow {
+    background: #F1C782;
+}
+
+.pink {
+    background: #E98A83;
+}
+
+.white {
+    background: #EEE7DF;
+}
+
+.grey {
+    background: #BFB8B4;
+}
+
+/* Los dos nuevos van con .category-dot delante: los de arriba son clases
+   sueltas (.pink, .blue...) y un nombre suelto nuevo podría chocar con otra
+   cosa de la hoja. */
+.category-dot.sage {
+    background: #A8C49A;
+}
+
+.category-dot.lilac {
+    background: #CDA9E0;
+}
+
+
+/* SIDEBAR BOTTOM */
+
+.customize-sidebar {
+    margin-top: auto;
+
+    width: 100%;
+
+    height: 48px;
+
+    border:
+        1px solid
+        var(--sidebar-line);
+
+    background:
+        rgba(255, 255, 255, 0.07);
+
+    border-radius: 8px;
+
+    color: var(--sidebar-text);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.75rem;
+}
+
+
+/* =====================================================
+   MAIN
+===================================================== */
+
+.main {
+    padding:
+        15px 25px 25px;
+
+    min-width: 0;
+
+    overflow: hidden;
+}
+
+
+/* TOP BAR */
+
+.topbar {
+    height: 39px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 20px;
+}
+
+.search {
+    width: 370px;
+
+    max-width: 100%;
+
+    height: 39px;
+
+    background: rgba(255, 249, 238, 0.78);
+
+    border:
+        1px solid
+        rgba(75,66,55,0.08);
+
+    border-radius: 9px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 15px;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.75rem;
+
+    color: #8A7068;
+}
+
+.search strong {
+    font-size: 1.5rem;
+
+    font-weight: normal;
+
+    color: var(--brown);
+}
+
+/* Solo existe en móvil; el @media de abajo lo enseña */
+.filter-field {
+    display: none;
+    position: relative;
+}
+
+#mobileFilter {
+    width: 100%;
+    height: 39px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    border: 1px solid rgba(75,66,55,0.08);
+    border-radius: 9px;
+    padding: 0 12px;
+    background: rgba(255, 249, 238, 0.78);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+}
+
+.filter-caret {
+    flex-shrink: 0;
+    opacity: 0.55;
+}
+
+/* Ocupa el ancho de la barra: es lo que hacía mal el desplegable del sistema,
+   que salía con las proporciones de una lista de escritorio. */
+.filter-picker {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+
+    padding: 12px;
+
+    background: var(--paper);
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    box-shadow: var(--sidebar-shadow);
+}
+
+.filter-picker[hidden] {
+    display: none;
+}
+
+/* Rótulo de cada grupo. Sin esto no se entendía que ahí estaban las categorías */
+.picker-label {
+    margin: 0 0 7px;
+
+    color: var(--muted);
+
+    font-size: 0.6875rem;
+
+    letter-spacing: 0.6px;
+
+    text-transform: uppercase;
+}
+
+.filter-picker .chip-options {
+    margin-bottom: 13px;
+}
+
+.filter-picker .chip-options:last-child {
+    margin-bottom: 0;
+}
+
+.picker-empty {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.chip-icon {
+    flex-shrink: 0;
+    opacity: 0.75;
+}
+
+.chip-count {
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    opacity: 0.55;
+}
+
+.search input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+}
+
+.search input:focus:not(:focus-visible) {
+    outline: 0;
+}
+
+.search input::placeholder {
+    color: #8A7068;
+}
+
+#newNoteDialog {
+    border: 0;
+    /* Sigue a "Forma de los paneles" como el resto de paneles flotantes */
+    border-radius: var(--panel-radius, 22px);
+    padding: 24px;
+
+    /* Antes solo tenía min-width: 280px y con el relleno sumaba 328px, que en
+       un móvil de 320 se salía de la pantalla. */
+    width: min(360px, calc(100vw - 32px));
+
+    /* Sin esto el diálogo sale con el blanco por defecto del navegador */
+    background: var(--paper);
+    color: var(--text);
+    box-shadow: 0 12px 40px rgba(75, 66, 55, 0.25);
+}
+
+#newNoteDialog::backdrop {
+    background: rgba(63, 48, 43, 0.35);
+}
+
+.new-note-form {
+    display: grid;
+    /* minmax(0, 1fr): si no, los campos con ancho propio estiran la rejilla */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+
+/* Las etiquetas de los campos. El grupo de tipos no es un <label> porque no
+   apunta a un solo control, pero debe leerse igual que los demás. */
+.new-note-form label,
+.form-label {
+    color: var(--muted);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+
+    margin-bottom: -6px;
+}
+
+.type-options {
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 8px;
+}
+
+.type-option {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 10px 4px;
+
+    border: 1px solid rgba(75, 66, 55, 0.09);
+
+    /* Radio propio y no --panel-radius: son controles pequeños dentro del
+       panel, igual que los campos, y con la forma Galleta (radio 0) se
+       quedaban en esquinas rectas dentro de una caja ondulada. */
+    border-radius: 11px;
+
+    background: rgba(255, 249, 238, 0.78);
+
+    color: var(--text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.type-option:hover {
+    transform: translateY(-2px);
+}
+
+/* Doble marca (borde y aro interior) para que se distinga sin depender solo
+   del color, que en la paleta clara queda muy suave. */
+.type-option.selected {
+    border-color: var(--coral);
+
+    box-shadow: inset 0 0 0 1px var(--coral);
+}
+
+/* Pastillas de categoría. Fluyen y se envuelven solas, así que aguantan las
+   categorías que añadas sin descuadrar el panel. */
+.chip-options {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+.chip-option {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    max-width: 100%;
+
+    padding: 7px 11px;
+
+    border: 1px solid rgba(75, 66, 55, 0.09);
+    border-radius: 999px;
+
+    background: rgba(255, 249, 238, 0.78);
+
+    color: var(--text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.chip-option.selected {
+    border-color: var(--coral);
+
+    box-shadow: inset 0 0 0 1px var(--coral);
+}
+
+.chip-option .category-dot {
+    width: 9px;
+    height: 9px;
+
+    /* El borde de .category-dot está pensado para el sidebar oscuro */
+    border-color: rgba(75, 66, 55, 0.22);
+}
+
+.dark-mode .chip-option {
+    background: var(--dark-surface);
+
+    border-color: var(--border);
+}
+
+/* El icono es el mismo de las tarjetas, a menor escala */
+.type-option .create-icon {
+    width: 34px;
+    height: 34px;
+
+    font-size: 1.25rem;
+
+    margin-bottom: 0;
+}
+
+.dark-mode .type-option {
+    background: var(--dark-surface);
+
+    border-color: var(--border);
+}
+
+.new-note-form input,
+.new-note-form select {
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px;
+    background: rgba(255, 249, 238, 0.78);
+    color: var(--text);
+    font: inherit;
+}
+
+/* El fondo crema de los campos está fijo, así que en oscuro quedaba texto claro
+   sobre un campo casi blanco (1.4 de contraste, ilegible). */
+.dark-mode .new-note-form input,
+.dark-mode .new-note-form select {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.dialog-actions button {
+    border-radius: 7px;
+    padding: 9px 14px;
+    background: var(--background);
+    color: var(--text);
+}
+
+.dialog-actions button[value="create"] {
+    background: var(--coral);
+    color: var(--white);
+}
+
+.top-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+.top-actions button {
+    background: transparent;
+
+    font-size: 1.375rem;
+
+    color: var(--brown);
+}
+
+
+/* BOTONES DE LA BARRA
+   Los tres comparten la misma pastilla para que se lean como un conjunto. */
+
+.top-actions .icon-button {
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: rgba(113, 62, 90, 0.12);
+
+    color: var(--plum);
+
+    font-size: 1.0625rem;
+
+    transition: background 0.2s, transform 0.25s;
+}
+
+.top-actions .icon-button:hover {
+    background: rgba(113, 62, 90, 0.20);
+}
+
+/* El de tema gira, el de personalizar crece: cada uno con su guiño */
+.top-actions #themeToggle:hover {
+    transform: rotate(-15deg);
+}
+
+.top-actions #openCustomize:hover {
+    transform: scale(1.1) rotate(-8deg);
+}
+
+.theme-icon {
+    width: 19px;
+    height: 19px;
+
+    display: block;
+}
+
+/* Solo se ve el icono del tema al que se va a cambiar */
+body:not(.dark-mode) .icon-sun,
+body.dark-mode .icon-moon {
+    display: none;
+}
+
+.dark-mode .top-actions .icon-button {
+    background: rgba(249, 238, 230, 0.10);
+
+    color: var(--text);
+}
+
+.dark-mode .top-actions .icon-button:hover {
+    background: rgba(249, 238, 230, 0.18);
+}
+
+/* El sol sí conserva su ámbar */
+.dark-mode .top-actions #themeToggle {
+    background: rgba(243, 184, 92, 0.16);
+
+    color: #F3B85C;
+}
+
+.dark-mode .top-actions #themeToggle:hover {
+    background: rgba(243, 184, 92, 0.26);
+}
+
+
+/* GRADUADOR DE TIPOGRAFÍA */
+
+.font-scale {
+    display: flex;
+
+    align-items: center;
+
+    gap: 2px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 8px;
+
+    padding: 2px;
+}
+
+.top-actions .font-scale button {
+    padding: 4px 7px;
+
+    border-radius: 6px;
+
+    font-size: 0.75rem;
+
+    line-height: 1;
+
+    color: var(--brown);
+}
+
+.top-actions .font-scale button:hover:not(:disabled) {
+    background: rgba(213, 122, 102, 0.14);
+}
+
+.top-actions .font-scale button:disabled {
+    opacity: 0.35;
+
+    cursor: default;
+}
+
+#fontScaleValue {
+    min-width: 42px;
+
+    text-align: center;
+}
+
+.avatar {
+    width: 34px;
+    height: 34px;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--coral),
+            var(--plum)
+        );
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: white;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.8125rem;
+}
+
+
+/* WELCOME */
+
+/* Dimensionado para el 140%, no para el 100%: aquí un recorte partiría el
+   saludo por la mitad y parecería un fallo. El margen inferior se elimina
+   porque ese hueco lo aporta ahora la propia altura. */
+.welcome {
+    height: 84px;
+
+    overflow: hidden;
+
+    margin-bottom: 0;
+}
+
+.welcome h1 {
+    color: var(--plum);
+
+    font-size: 1.875rem;
+
+    font-weight: 500;
+
+    line-height: 1.1;
+}
+
+.welcome h1 span {
+    color: var(--pink);
+}
+
+.welcome p {
+    color: var(--plum);
+
+    margin-top: 5px;
+
+    font-size: 1.0625rem;
+}
+
+
+/* =====================================================
+   CREATE CARDS
+===================================================== */
+
+.create-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 10px;
+
+    margin-bottom: 30px;
+}
+
+.create-card {
+    min-height: 133px;
+
+    background:
+        rgba(255, 249, 238, 0.78);
+
+    border:
+        1px solid
+        rgba(75,66,55,0.09);
+
+    border-radius: var(--panel-radius, 11px);
+
+    box-shadow:
+        0 5px 15px
+        rgba(75,66,55,0.05);
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 2px;
+
+    transition: 0.2s;
+
+    cursor: pointer;
+}
+
+.create-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 10px 25px
+        rgba(75,66,55,0.10);
+}
+
+.create-card span:not(.create-icon) {
+    font-size: 0.9375rem;
+}
+
+.create-card strong {
+    font-size: 1rem;
+}
+
+.create-icon {
+    width: 44px;
+    height: 44px;
+
+    border-radius: 9px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 1.6875rem;
+
+    margin-bottom: 8px;
+}
+
+.create-icon.note {
+    background: #EA8077;
+    color: white;
+}
+
+.create-icon.list {
+    background: #4E4A44;
+    color: white;
+}
+
+.create-icon.recipe {
+    background: #D77A59;
+    color: white;
+}
+
+.create-icon.idea {
+    background: #F0B24B;
+    color: white;
+}
+
+.create-icon.plan {
+    background: #E68B65;
+    color: white;
+}
+
+
+/* =====================================================
+   RECENT NOTES
+===================================================== */
+
+.section-heading {
+    height: 30px;
+
+    overflow: hidden;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 10px;
+}
+
+.section-heading h2 {
+    font-size: 1.0625rem;
+
+    font-weight: 500;
+}
+
+.section-heading button {
+    background: transparent;
+
+    color: #BE4E55;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.75rem;
+}
+
+
+.notes-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 10px;
+}
+
+
+/* TARJETAS COLGADAS
+   Cada nota va sujeta al tablero con una tachuela o un clip. Todo va en el
+   envoltorio y no en la tarjeta: ella tiene overflow:hidden y, con la forma
+   Galleta, una máscara, y las dos recortarían lo que asoma por arriba. Y como
+   el que se balancea es el envoltorio, el giro fijo del Post-it no se pisa. */
+
+.note-pinned {
+    position: relative;
+
+    /* Hueco para la cabeza de la tachuela y el lazo del clip */
+    padding-top: 12px;
+
+    /* Sin esto, una columna de la rejilla no baja del ancho de su palabra más
+       larga: un enlace pegado en una sola nota estiraba la columna entera, y
+       con ella todas las tarjetas, más allá de la pantalla del móvil. */
+    min-width: 0;
+}
+
+/* La sujeción es un botón: al pulsarla se elige cuál poner y de qué color */
+.note-fastener-btn {
+    position: absolute;
+    z-index: 2;
+
+    padding: 0;
+
+    background: transparent;
+
+    /* El color va aquí y no en el envoltorio: puesto allí lo heredaría también
+       el texto de la tarjeta. */
+    color: var(--pin-color, var(--coral));
+
+    /* "grab": se puede arrastrar para cambiarla de sitio (y pulsar la abre) */
+    cursor: grab;
+
+    /* Sin esto, arrastrarla con el dedo desplazaría la página */
+    touch-action: none;
+
+    transition: scale 0.15s;
+}
+
+/* Mientras se coloca, la tarjeta se queda quieta: ni el balanceo del ratón ni
+   el del deslizar. Si se moviera, el dedo y la tachuela no coincidirían. */
+.note-pinned.moviendo-sujecion {
+    transform: none !important;
+
+    animation: none !important;
+}
+
+.moviendo-sujecion .note-fastener-btn {
+    cursor: grabbing;
+
+    scale: 1.2;
+}
+
+/* `scale` y no `transform: scale()`: el clip y la cinta ya van girados con
+   transform, y un segundo transform se comería ese giro. */
+.note-fastener-btn:hover {
+    scale: 1.14;
+}
+
+.note-fastener {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    filter: drop-shadow(0 1px 1.5px rgba(60, 40, 30, 0.28));
+}
+
+.note-pinned--pin .note-fastener-btn {
+    top: 0;
+    left: 50%;
+
+    width: 26px;
+    height: 26px;
+
+    margin-left: -13px;
+}
+
+/* En la esquina de arriba a la DERECHA: a la izquierda tapaba el rótulo del
+   tipo de nota ("RECETA", "NOTA"), que va justo ahí. */
+.note-pinned--clip .note-fastener-btn {
+    top: -4px;
+    right: 24px;
+
+    width: 17px;
+    height: 40px;
+
+    transform: rotate(8deg);
+}
+
+/* La cinta cruza el borde de arriba, como un trozo de washi tape */
+.note-pinned--tape .note-fastener-btn {
+    top: 1px;
+    left: 50%;
+
+    width: 58px;
+    height: 21px;
+
+    margin-left: -29px;
+
+    transform: rotate(-4deg);
+}
+
+/* Cada una gira desde donde está sujeta, como un papel colgado de verdad */
+.note-pinned--pin,
+.note-pinned--tape {
+    transform-origin: 50% 12px;
+}
+
+.note-pinned--clip {
+    transform-origin: calc(100% - 33px) 12px;
+}
+
+/* PANEL DE SUJECIÓN */
+
+.fastener-picker {
+    position: fixed;
+    z-index: 80;
+
+    width: 236px;
+
+    padding: 12px;
+
+    background: var(--paper);
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    box-shadow: var(--sidebar-shadow);
+}
+
+.fastener-picker:not([hidden]) {
+    animation: panel-in 0.32s cubic-bezier(0.25, 0.55, 0.35, 1) backwards;
+    transform-origin: top center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fastener-picker:not([hidden]) {
+        animation: none;
+    }
+}
+
+.fastener-types {
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 6px;
+
+    margin-bottom: 13px;
+}
+
+.fastener-type {
+    height: 66px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 5px;
+
+    padding: 8px 4px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: transparent;
+}
+
+.fastener-type .note-fastener {
+    width: 42px;
+    height: 28px;
+}
+
+/* El botón lleva el color de la sujeción para el dibujo; el rótulo no */
+.fastener-type span {
+    color: var(--text);
+
+    font-size: 0.6875rem;
+}
+
+.fastener-type.selected {
+    border-color: var(--coral);
+
+    box-shadow: inset 0 0 0 1px var(--coral);
+}
+
+.fastener-colors {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+}
+
+.fastener-swatch {
+    width: 21px;
+    height: 21px;
+
+    padding: 0;
+
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 50%;
+
+    cursor: pointer;
+}
+
+/* "Como la nota" se distingue de las demás muestras con un aro: el centro en
+   el color del papel dice "el que toque", no un color fijo. */
+.fastener-swatch[data-set-fastener-color="auto"] {
+    border-color: rgba(0, 0, 0, 0.25);
+
+    box-shadow: inset 0 0 0 4px var(--paper);
+}
+
+.fastener-swatch.selected {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.fastener-hint {
+    margin: 12px 0 0;
+
+    color: var(--muted);
+
+    font-size: 0.6875rem;
+}
+
+.fastener-reset {
+    width: 100%;
+
+    margin-top: 8px;
+
+    padding: 7px;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: transparent;
+
+    color: var(--text);
+
+    font-size: 0.75rem;
+}
+
+.fastener-reset:hover {
+    border-color: var(--coral);
+}
+
+/* Al pasar el ratón la nota se balancea y se va parando, como si la hubieras
+   rozado. Solo con ratón: en el móvil no existe "pasar por encima", y un toque
+   ya abre la nota. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .note-pinned:hover {
+        animation: colgar 1.15s cubic-bezier(0.3, 0.6, 0.4, 1);
+    }
+
+    .note-pinned:hover .note-card {
+        box-shadow: 0 12px 26px rgba(75, 66, 55, 0.16);
+    }
+}
+
+@keyframes colgar {
+    0%   { transform: rotate(0deg); }
+    18%  { transform: rotate(2.6deg); }
+    42%  { transform: rotate(-1.9deg); }
+    66%  { transform: rotate(1deg); }
+    85%  { transform: rotate(-0.4deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+
+    padding: 40px 20px;
+
+    text-align: center;
+
+    color: var(--muted);
+
+    font-size: 0.9375rem;
+}
+
+
+/* NOTE CARD */
+
+.note-card {
+    /* Altura fija: la vista previa cede espacio en vez de estirar la tarjeta */
+    height: 245px;
+
+    border-radius: var(--panel-radius, 11px);
+
+    overflow: hidden;
+
+    box-shadow:
+        0 5px 15px
+        rgba(75,66,55,0.08);
+
+    position: relative;
+
+    padding: 16px;
+
+    display: flex;
+
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.note-card h3 {
+    font-size: 1.0625rem;
+
+    line-height: 1.15;
+
+    margin-top: 8px;
+
+    /* Un título de una sola palabra larguísima se parte en vez de salirse */
+    overflow-wrap: anywhere;
+}
+
+/* Las tarjetas de Recientes ya no se editan en línea, así que su título y su
+   vista previa no deben parecer campos de texto: la tarjeta entera es un
+   destino que abre la nota. */
+.note-card h3,
+.note-card .note-preview {
+    cursor: pointer;
+}
+
+.note-preview {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    margin-top: 9px;
+    line-height: 1.35;
+
+    /* Un enlace pegado se parte en varias líneas en vez de cortarse */
+    overflow-wrap: anywhere;
+}
+
+.note-preview h1,
+.note-preview h2,
+.note-preview h3 {
+    font-size: 0.875rem;
+    margin: 0 0 5px;
+}
+
+.note-preview p {
+    margin: 0 0 5px;
+}
+
+.note-preview ol,
+.note-preview ul {
+    margin: 0 0 5px;
+    padding-left: 18px;
+}
+
+.note-preview img {
+    max-width: 100%;
+}
+
+.note-type {
+    font-family: Arial, sans-serif;
+
+    font-size: 0.5rem;
+
+    letter-spacing: 1px;
+
+    color: #8A4B47;
+}
+
+.note-footer {
+    margin-top: auto;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.625rem;
+}
+
+/* Fecha + categoría. Van juntas en un hueco para que .note-footer siga teniendo
+   dos hijos y el space-between no se descoloque. */
+.note-meta {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    min-width: 0;
+}
+
+.note-category {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 4px;
+
+    min-width: 0;
+
+    max-width: 105px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    opacity: 0.85;
+}
+
+.note-category .category-dot {
+    width: 8px;
+    height: 8px;
+
+    /* El borde de .category-dot está pensado para el sidebar; sobre la tarjeta
+       clara se sale del tono, así que aquí se apaga. */
+    border-color: rgba(75, 66, 55, 0.22);
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.card-actions button {
+    padding: 3px;
+    background: transparent;
+    color: var(--brown);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.card-actions .card-delete {
+    color: #B3544F;
+}
+
+.note-card.note-background-plain {
+    background-color: var(--note-card-background, #FFF9F2);
+}
+
+/* Los patrones usan la variante -soft (mismo color con alfa): a plena opacidad
+   la cuadrícula y los puntos compiten con el texto y lo vuelven ilegible. */
+
+.note-card.note-background-lines {
+    background-color: var(--note-card-background, #FFF9F2);
+    background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--note-card-pattern-soft, #EBCFC1) 28px);
+}
+
+.note-card.note-background-dots {
+    background-color: var(--note-card-background, #FFF9F2);
+    background-image: radial-gradient(var(--note-card-pattern-soft, #D57A66) 1px, transparent 1px);
+    background-size: 12px 12px;
+}
+
+.note-card.note-background-grid {
+    background-color: var(--note-card-background, #FFF9F2);
+    background-image: linear-gradient(var(--note-card-pattern-soft, #EBCFC1) 1px, transparent 1px), linear-gradient(90deg, var(--note-card-pattern-soft, #EBCFC1) 1px, transparent 1px);
+    background-size: 18px 18px;
+}
+
+.note-card.note-background-flowers {
+    background-color: var(--note-card-background, #FFF9F2);
+    background-image: radial-gradient(circle at 20% 20%, rgba(213,122,102,0.18) 0 3px, transparent 4px), radial-gradient(circle at 80% 70%, rgba(202,102,128,0.18) 0 3px, transparent 4px);
+    background-size: 42px 42px;
+}
+
+/* Las tarjetas son mucho menores que la hoja: el patrón va a menor escala para
+   que se reconozca de un vistazo y no parezca otro fondo distinto. */
+
+.note-card.note-background-checks {
+    background-color: var(--note-card-background, #FFF9F2);
+    background-image:
+        repeating-linear-gradient(to right, color-mix(in srgb, var(--note-card-pattern-soft, #EBCFC1) 45%, transparent) 0 11px, transparent 11px 22px),
+        repeating-linear-gradient(to bottom, color-mix(in srgb, var(--note-card-pattern-soft, #EBCFC1) 45%, transparent) 0 11px, transparent 11px 22px);
+}
+
+.note-card.note-background-diagonal {
+    background-color: var(--note-card-background, #FFF9F2);
+    background-image:
+        repeating-linear-gradient(45deg, var(--note-card-pattern-soft, #EBCFC1) 0 1px, transparent 1px 13px),
+        repeating-linear-gradient(-45deg, var(--note-card-pattern-soft, #EBCFC1) 0 1px, transparent 1px 13px);
+}
+
+.note-card.note-background-waves {
+    background-color: var(--note-card-background, #FFF9F2);
+    background-image: radial-gradient(circle at 50% 100%, transparent 0 6px, var(--note-card-pattern-soft, #EBCFC1) 6px 7px, transparent 7px);
+    background-size: 17px 9px;
+}
+
+.note-card.note-background-clouds {
+    background-color: var(--note-card-background, #FFF9F2);
+    background-image:
+        radial-gradient(circle at 18% 30%, color-mix(in srgb, var(--note-card-pattern-soft, #EBCFC1) 40%, transparent) 0 12px, transparent 13px),
+        radial-gradient(circle at 33% 24%, color-mix(in srgb, var(--note-card-pattern-soft, #EBCFC1) 40%, transparent) 0 8px, transparent 9px),
+        radial-gradient(circle at 66% 64%, color-mix(in srgb, var(--note-card-pattern-soft, #EBCFC1) 40%, transparent) 0 10px, transparent 11px),
+        radial-gradient(circle at 80% 58%, color-mix(in srgb, var(--note-card-pattern-soft, #EBCFC1) 40%, transparent) 0 7px, transparent 8px);
+    background-size: 95px 70px;
+}
+
+.note-card.note-style-post-it {
+    transform: rotate(-1deg);
+}
+
+.note-card.note-style-card {
+    border: 1px solid rgba(75,66,55,0.15);
+}
+
+.note-card.note-style-journal {
+    border-left: 7px solid var(--note-card-pattern, var(--coral));
+}
+
+/* Tamaño fijo en rem: sigue la escala general de la app, nunca el tamaño por
+   nota. Así todas las tarjetas de Recientes se ven a la misma medida. */
+.note-card .note-preview {
+    color: inherit;
+    font-family: var(--note-card-font, inherit) !important;
+    font-size: 1rem;
+}
+
+.note-card.note-style-post-it .note-preview,
+.note-card.note-style-card .note-preview,
+.note-card.note-style-journal .note-preview {
+    background: transparent;
+}
+
+
+/* Las clases por tipo (.recipe-card, .shopping-card, .travel-card...) se
+   eliminaron: las tarjetas ahora se pintan con la personalización por nota
+   (note-background-* / note-style-*), que además las ganaba en especificidad. */
+
+
+/* =====================================================
+   BOTTOM PANELS
+===================================================== */
+
+.bottom-panels {
+    display: grid;
+
+    grid-template-columns: 1fr 1.25fr;
+
+    gap: 14px;
+
+    margin-top: 30px;
+}
+
+.panel {
+    border:
+        1px solid
+        rgba(75,66,55,0.1);
+
+    background:
+        rgba(255, 249, 238, 0.55);
+
+    border-radius: var(--panel-radius, 13px);
+
+    padding: 18px;
+
+    /* Altura fija para que el bloque inferior no se mueva al graduar la letra */
+    height: 322px;
+
+    overflow: hidden;
+}
+
+.panel-title {
+    color: var(--plum);
+
+    font-size: 0.9375rem;
+
+    margin-bottom: 18px;
+
+    display: flex;
+
+    gap: 10px;
+}
+
+.panel-title em {
+    font-style: normal;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+/* =====================================================
+   CALENDARIO
+===================================================== */
+
+.calendar-panel {
+    display: flex;
+
+    flex-direction: column;
+}
+
+.calendar-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    color: var(--plum);
+
+    font-size: 0.9375rem;
+
+    margin-bottom: 14px;
+}
+
+.calendar-header button {
+    width: 26px;
+    height: 26px;
+
+    border-radius: 50%;
+
+    background: transparent;
+
+    color: var(--plum);
+
+    font-size: 1.25rem;
+
+    line-height: 1;
+}
+
+.calendar-header button:hover {
+    background: rgba(213, 122, 102, 0.14);
+}
+
+/* minmax(0, 1fr) y no 1fr: una columna 1fr no baja del ancho de su contenido,
+   así que las celdas de 40px del móvil empujaban el calendario fuera del panel
+   en pantallas estrechas y el domingo quedaba recortado. */
+.calendar-weekdays,
+.calendar-grid {
+    display: grid;
+
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+
+    gap: 4px;
+}
+
+/* Círculos de tamaño fijo centrados en su columna: con aspect-ratio, las
+   celdas crecían con el ancho del panel y el calendario se volvía enorme. */
+.calendar-grid {
+    justify-items: center;
+
+    gap: 5px 4px;
+}
+
+.calendar-weekdays {
+    margin-bottom: 7px;
+}
+
+.calendar-weekdays span {
+    text-align: center;
+
+    font-size: 0.625rem;
+
+    letter-spacing: 1px;
+
+    color: var(--muted);
+}
+
+.calendar-day {
+    position: relative;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: transparent;
+
+    color: var(--text);
+
+    font-size: 0.8125rem;
+
+    line-height: 1;
+}
+
+.calendar-day.is-blank {
+    visibility: hidden;
+}
+
+/* Días sin notas: apagados, pero igual de pulsables que el resto */
+.calendar-day.is-quiet {
+    color: rgba(63, 48, 43, 0.42);
+}
+
+.calendar-day.has-notes {
+    font-weight: 600;
+}
+
+button.calendar-day {
+    cursor: pointer;
+}
+
+button.calendar-day:hover {
+    background: rgba(213, 122, 102, 0.16);
+}
+
+.calendar-day.is-today {
+    outline: 1px solid var(--coral);
+
+    outline-offset: -1px;
+}
+
+/* Gana al :hover, que si no se impondría por especificidad */
+.calendar-day.is-selected,
+button.calendar-day.is-selected:hover {
+    background: var(--coral);
+
+    color: #FFF6F1;
+}
+
+.calendar-footer {
+    margin-top: auto;
+
+    padding-top: 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 8px;
+
+    font-size: 0.6875rem;
+
+    color: var(--muted);
+}
+
+.calendar-marks {
+    position: absolute;
+
+    bottom: 4px;
+
+    display: flex;
+
+    gap: 2px;
+}
+
+.calendar-dot {
+    width: 4px;
+    height: 4px;
+
+    border-radius: 50%;
+}
+
+.calendar-dot.is-note {
+    background: var(--coral);
+}
+
+.calendar-dot.is-reminder {
+    background: var(--plum);
+}
+
+.calendar-day.is-selected .calendar-dot {
+    background: #FFF6F1;
+}
+
+.calendar-footer .calendar-dot {
+    display: inline-block;
+
+    vertical-align: middle;
+}
+
+.calendar-footer button {
+    background: transparent;
+
+    color: var(--coral);
+
+    font-size: 0.6875rem;
+
+    text-decoration: underline;
+
+    flex-shrink: 0;
+}
+
+
+/* CUSTOMIZATION */
+
+.panel h4 {
+    font-family: Arial, sans-serif;
+
+    font-size: 0.625rem;
+
+    margin:
+        13px 0 8px;
+}
+
+.color-options {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 12px;
+}
+
+.color {
+    width: 20px;
+    height: 20px;
+
+    border-radius: 50%;
+
+    border: 1px solid
+        rgba(27, 26, 27, 0.089);
+}
+
+/* Las clases .color.purple, .color.brown, etc. se eliminaron: duplicaban la
+   paleta y además tiraban de las variables del tema (--plum, --cream), no de
+   los colores de nota, así que la muestra no coincidía con el resultado. El
+   color lo pone ahora renderNoteColors() desde COLOR_VALUES. */
+
+
+/* BACKGROUNDS */
+
+/* Rejilla y no una fila flexible: en fila, cada fondo que se añadía encogía a
+   todos los demás para caber (con nueve bajaban de 31 a 28px y los dibujos ya
+   no se distinguían). En rejilla se reparten en dos filas y mantienen tamaño. */
+.background-options {
+    display: grid;
+
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    gap: 7px;
+}
+
+.background {
+    height: 38px;
+
+    border:
+        1px solid
+        rgba(75,66,55,0.15);
+
+    border-radius: 5px;
+
+    /* La muestra "liso" enseña el papel real de la nota, no un blanco */
+    background: var(--paper);
+}
+
+.background.lines {
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            #FFF7EF 0,
+            #FFF7EF 8px,
+            #EBCFC1 9px
+        );
+}
+
+.background.dots {
+    background-color: #FFF8F0;
+
+    background-image:
+        radial-gradient(
+            #D57A66 1px,
+            transparent 1px
+        );
+
+    background-size: 8px 8px;
+}
+
+.background.grid {
+    background:
+        linear-gradient(#EBCFC1 1px, transparent 1px),
+        linear-gradient(90deg,#EBCFC1 1px, transparent 1px);
+
+    background-size: 9px 9px;
+
+    background-color: #FFF8F0;
+}
+
+.background.flowers {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: var(--coral);
+
+    font-size: 1.125rem;
+}
+
+/* Muestras de los fondos nuevos. Van con colores fijos, como las de arriba: la
+   muestra enseña el dibujo, y el color se lo pone luego cada nota. */
+
+.background.checks {
+    background-color: #FFF8F0;
+
+    background-image:
+        repeating-linear-gradient(to right, rgba(213, 122, 102, 0.28) 0 8px, transparent 8px 16px),
+        repeating-linear-gradient(to bottom, rgba(213, 122, 102, 0.28) 0 8px, transparent 8px 16px);
+}
+
+.background.diagonal {
+    background-color: #FFF8F0;
+
+    background-image:
+        repeating-linear-gradient(45deg, #EBCFC1 0 1px, transparent 1px 8px),
+        repeating-linear-gradient(-45deg, #EBCFC1 0 1px, transparent 1px 8px);
+}
+
+.background.waves {
+    background-color: #FFF8F0;
+
+    background-image: radial-gradient(circle at 50% 100%, transparent 0 5px, #D9927E 5px 6px, transparent 6px);
+
+    background-size: 14px 7px;
+}
+
+.background.clouds {
+    background-color: #FFF8F0;
+
+    background-image:
+        radial-gradient(circle at 32% 42%, rgba(213, 122, 102, 0.32) 0 9px, transparent 10px),
+        radial-gradient(circle at 58% 34%, rgba(213, 122, 102, 0.32) 0 6px, transparent 7px);
+}
+
+
+/* STYLES */
+
+.style-options {
+    display: flex;
+
+    gap: 5px;
+}
+
+.style-options button {
+    padding:
+        7px 12px;
+
+    border-radius: 5px;
+
+    background: #F3E5D9;
+
+    font-size: 0.625rem;
+
+    color: var(--brown);
+}
+
+.style-options button.selected {
+    border:
+        1px solid
+        var(--coral);
+
+    color: #B74D4B;
+
+    background: #FFF1E9;
+}
+
+
+/* DECORATIONS */
+
+.decorations {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+/* Da el marco de referencia a la paleta de corazones */
+.decorations-row {
+    position: relative;
+}
+
+/* Las decoraciones dibujadas se escalan con el font-size del contenedor, igual
+   que haría un emoji. */
+.deco-svg {
+    width: 1em;
+    height: 1em;
+    display: block;
+}
+
+/* Los mismos dibujos, pero insertados dentro del texto de una nota. Aquí van
+   en línea y no en bloque: como bloque partirían el renglón en dos. */
+.note-sticker {
+    width: 1.15em;
+    height: 1.15em;
+
+    display: inline-block;
+
+    vertical-align: -0.2em;
+}
+
+/* `.paper-content img` fija height:auto y gana por especificidad: sin esto el
+   dibujo se quedaba con 0 de alto hasta que la imagen terminaba de cargar. */
+.paper-content img.note-sticker {
+    height: 1.15em;
+}
+
+/* Lo mismo en la hoja del editor: un enlace o una palabra larguísima pegada en
+   la nota se parte en vez de ensanchar la hoja por encima de la pantalla. */
+.paper-content {
+    overflow-wrap: anywhere;
+}
+
+/* PEGATINAS COLOCADAS SOBRE LA HOJA
+   No van dentro del texto: flotan encima y se colocan a mano. La capa deja
+   pasar el ratón para poder seguir escribiendo; solo las pegatinas lo cogen. */
+
+.sticker-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+
+    overflow: hidden;
+
+    pointer-events: none;
+}
+
+.note-sticker-item {
+    position: absolute;
+
+    pointer-events: auto;
+
+    cursor: grab;
+
+    /* Sin esto, arrastrar con el dedo desplaza la hoja en vez de mover la
+       pegatina. */
+    touch-action: none;
+
+    transform-origin: center;
+}
+
+.note-sticker-item:active {
+    cursor: grabbing;
+}
+
+.note-sticker-item img {
+    width: 100%;
+    height: auto;
+
+    display: block;
+
+    user-select: none;
+    -webkit-user-drag: none;
+
+    filter: drop-shadow(0 3px 7px rgba(75, 66, 55, 0.28));
+}
+
+.note-sticker-item.is-selected {
+    outline: 2px dashed var(--coral);
+    outline-offset: 5px;
+}
+
+/* Tiradores: solo con la pegatina seleccionada, para no ensuciar la nota */
+.sticker-handle {
+    position: absolute;
+
+    width: 24px;
+    height: 24px;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid var(--coral);
+    border-radius: 50%;
+
+    background: var(--paper);
+
+    color: var(--coral);
+
+    font-size: 0.8125rem;
+    line-height: 1;
+
+    box-shadow: 0 2px 6px rgba(75, 66, 55, 0.22);
+}
+
+.note-sticker-item.is-selected .sticker-handle {
+    display: flex;
+}
+
+.sticker-remove {
+    top: -12px;
+    left: -12px;
+
+    cursor: pointer;
+}
+
+.sticker-rotate {
+    top: -12px;
+    right: -12px;
+
+    cursor: grab;
+}
+
+.sticker-resize {
+    right: -12px;
+    bottom: -12px;
+
+    cursor: nwse-resize;
+}
+
+.sticker-resize::after {
+    content: "⤡";
+}
+
+.heart-picker {
+    position: absolute;
+    top: calc(100% + 7px);
+    left: 0;
+    z-index: 3;
+
+    display: grid;
+
+    grid-template-columns: repeat(6, 1fr);
+
+    gap: 5px;
+
+    padding: 9px;
+
+    background: var(--paper);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    box-shadow: var(--sidebar-shadow);
+}
+
+.heart-picker[hidden] {
+    display: none;
+}
+
+.heart-picker button {
+    width: 28px;
+    height: 28px;
+
+    border-radius: 50%;
+
+    background: transparent;
+
+    font-size: 1.0625rem;
+
+    line-height: 1;
+
+    padding: 0;
+}
+
+.heart-picker button:hover {
+    background: rgba(213, 122, 102, 0.16);
+}
+
+/* PANEL DE EMOJIS
+   Flota al pie de la nota, ancho. Antes era estrecho y alto y necesitaba barra
+   de desplazamiento; al ocupar todo el ancho, los 72 caben de una vez y las
+   columnas se ajustan solas al espacio disponible. */
+
+.emoji-popover {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 5;
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(30px, 1fr));
+
+    gap: 4px;
+
+    padding: 12px;
+
+    background: var(--paper);
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    box-shadow: var(--sidebar-shadow);
+}
+
+/* Sin esto, `display: grid` ganaría al atributo hidden y se vería siempre. */
+.emoji-popover[hidden] {
+    display: none;
+}
+
+.emoji-popover button {
+    aspect-ratio: 1;
+
+    /* Igual que en Decoraciones: los emoji son texto y se centran solos, pero
+       los dibujados son un bloque con ancho propio y se irían a la izquierda. */
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: transparent;
+
+    font-size: 1.0625rem;
+
+    line-height: 1;
+
+    padding: 0;
+}
+
+.emoji-popover button:hover {
+    background: rgba(213, 122, 102, 0.16);
+}
+
+.toolbar #toggleEmojis[aria-expanded="true"],
+.toolbar #toggleStickers[aria-expanded="true"] {
+    background: rgba(213, 122, 102, 0.24);
+
+    color: var(--coral);
+}
+
+/* Celdas mucho mayores que las de emoji: aquí hay ilustraciones con detalle */
+.sticker-popover {
+    grid-template-columns: repeat(auto-fit, minmax(62px, 1fr));
+
+    gap: 6px;
+
+    max-height: 46vh;
+
+    overflow-y: auto;
+}
+
+.sticker-popover button {
+    aspect-ratio: 1;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px;
+
+    border-radius: 12px;
+
+    background: transparent;
+}
+
+.sticker-popover button:hover {
+    background: rgba(213, 122, 102, 0.16);
+}
+
+.sticker-popover img {
+    max-width: 100%;
+    max-height: 100%;
+
+    object-fit: contain;
+}
+
+.decorations button {
+    width: 29px;
+    height: 29px;
+
+    /* Centrado explícito: los emoji son texto y los centraba el text-align del
+       botón, pero las decoraciones dibujadas son un bloque con ancho propio y
+       se quedaban pegadas al borde izquierdo. */
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--paper);
+
+    font-size: 0.9375rem;
+
+    color: var(--brown);
+
+    box-shadow:
+        0 2px 5px
+        rgba(0,0,0,0.05);
+}
+
+
+/* =====================================================
+   RECORDATORIOS
+===================================================== */
+
+.reminders-panel {
+    display: flex;
+
+    flex-direction: column;
+}
+
+.reminders-title {
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 8px;
+
+    color: var(--plum);
+
+    font-size: 0.9375rem;
+
+    margin-bottom: 14px;
+}
+
+.reminders-title em {
+    font-style: normal;
+
+    font-size: 0.75rem;
+
+    color: var(--muted);
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+.reminders-list {
+    /* Con el panel de alto fijo, la lista es lo que hace scroll */
+    flex: 1;
+
+    min-height: 0;
+
+    overflow-y: auto;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+
+    margin-bottom: 14px;
+}
+
+.reminders-empty {
+    padding: 18px 4px;
+
+    color: var(--muted);
+
+    font-size: 0.8125rem;
+}
+
+.reminder {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 8px 10px;
+
+    border-radius: 9px;
+
+    background: rgba(255, 249, 238, 0.70);
+
+    border-left: 4px solid var(--reminder-color, var(--coral));
+}
+
+.reminder.is-done .reminder-body {
+    text-decoration: line-through;
+
+    opacity: 0.55;
+}
+
+.reminder-check {
+    flex-shrink: 0;
+
+    width: 18px;
+    height: 18px;
+
+    border-radius: 5px;
+
+    border: 1px solid var(--reminder-color, var(--coral));
+
+    background: transparent;
+
+    color: var(--white);
+
+    font-size: 0.6875rem;
+
+    line-height: 1;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+.reminder.is-done .reminder-check {
+    background: var(--reminder-color, var(--coral));
+}
+
+.reminder-body {
+    flex: 1;
+
+    min-width: 0;
+
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 7px;
+}
+
+.reminder-time {
+    flex-shrink: 0;
+
+    font-size: 0.6875rem;
+
+    color: var(--reminder-color, var(--coral));
+}
+
+.reminder-text {
+    font-size: 0.875rem;
+
+    overflow-wrap: anywhere;
+}
+
+.reminder-actions {
+    display: flex;
+
+    gap: 3px;
+
+    flex-shrink: 0;
+}
+
+.reminder-actions button {
+    padding: 3px;
+
+    background: transparent;
+
+    color: var(--muted);
+
+    font-size: 0.875rem;
+
+    line-height: 1;
+}
+
+.reminder-actions .reminder-remove {
+    color: #B3544F;
+}
+
+
+/* FORMULARIO */
+
+.reminder-form {
+    flex-shrink: 0;
+
+    padding-top: 13px;
+
+    border-top: 1px solid var(--border);
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 9px;
+}
+
+.reminder-fields {
+    display: flex;
+
+    gap: 7px;
+}
+
+.reminder-form input {
+    border: 1px solid var(--border);
+
+    border-radius: 7px;
+
+    padding: 8px 10px;
+
+    background: rgba(255, 249, 238, 0.78);
+
+    color: var(--text);
+
+    font: inherit;
+
+    font-size: 0.8125rem;
+}
+
+#reminderTime {
+    flex-shrink: 0;
+
+    width: 92px;
+}
+
+#reminderText {
+    flex: 1;
+
+    min-width: 0;
+}
+
+/* Rejilla de 8 para que los 16 colores queden en dos filas exactas en vez de
+   repartirse de forma desigual al ajustarse al ancho. */
+.reminder-colors {
+    display: grid;
+
+    grid-template-columns: repeat(8, 1fr);
+
+    gap: 7px;
+
+    justify-items: center;
+}
+
+.reminder-color {
+    width: 100%;
+    max-width: 20px;
+    height: auto;
+
+    aspect-ratio: 1;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(27, 26, 27, 0.09);
+}
+
+.reminder-color.is-chosen {
+    outline: 1px solid var(--coral);
+
+    outline-offset: 3px;
+}
+
+.reminder-form-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+}
+
+.reminder-form-actions button {
+    border-radius: 7px;
+
+    padding: 8px 16px;
+
+    font-size: 0.75rem;
+
+    background: var(--background);
+
+    color: var(--text);
+}
+
+#reminderSubmit {
+    background: #E97974;
+
+    color: white;
+
+    transition: 0.2s;
+}
+
+#reminderSubmit:hover {
+    background: #D96764;
+}
+
+
+/* =====================================================
+   EDITOR
+===================================================== */
+
+/* Panel flotante, igual que el sidebar */
+.editor {
+    position: sticky;
+    top: 14px;
+    align-self: start;
+
+    height: calc(100vh - 28px);
+
+    margin: 14px 14px 14px 0;
+
+    background: var(--background);
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    border: 1px solid var(--border);
+    border-radius: var(--panel-radius, 22px);
+
+    box-shadow: var(--sidebar-shadow);
+
+    /* Recorta el papel para que respete las esquinas redondeadas */
+    overflow: hidden;
+}
+
+/* Cabecera, barra y pie conservan su alto; el papel es el que cede y desplaza */
+.editor-header,
+.editor .toolbar,
+.editor-footer {
+    flex-shrink: 0;
+}
+
+.editor.is-hidden {
+    display: none;
+}
+
+
+/* EDITOR HEADER */
+
+.editor-header {
+    height: 72px;
+
+    padding: 0 18px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    border-bottom:
+        1px solid
+        rgba(75,66,55,0.08);
+}
+
+.editor-title {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    font-size: 0.9375rem;
+}
+
+.editor-title button {
+    background: transparent;
+
+    font-size: 1.5rem;
+
+    color: var(--brown);
+}
+
+.favorite-star {
+    color: #D38A3D;
+
+    font-size: 1.375rem;
+}
+
+.saved {
+    font-family: Arial, sans-serif;
+
+    font-size: 0.625rem;
+
+    color: #74645D;
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+.saved:hover,
+.saved:focus-visible {
+    background: rgba(213,122,102,0.12);
+    color: var(--coral);
+}
+
+
+/* TOOLBAR */
+
+.toolbar {
+    height: 46px;
+
+    border-bottom:
+        1px solid
+        rgba(75,66,55,0.08);
+
+    display: flex;
+
+    align-items: center;
+
+    /* Menos que antes (14px): ahora cada botón trae su propio redondel de 28px
+       y con el hueco anterior la barra quedaba desparramada. */
+    gap: 5px;
+
+    padding: 0 18px;
+}
+
+.toolbar-divider {
+    margin: 0 5px;
+}
+
+/* Con tamaño propio y esquinas redondas para que el resalte de "activa" tenga
+   dónde dibujarse: antes el botón medía justo la letra y el fondo quedaba
+   pegado a ella. */
+.toolbar button {
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: transparent;
+
+    font-size: 1.0625rem;
+
+    color: var(--brown);
+
+    transition: background 0.15s, color 0.15s;
+}
+
+.toolbar button:hover {
+    background: rgba(213, 122, 102, 0.12);
+}
+
+/* Redondel de fondo mientras la función está aplicada donde está el cursor, o
+   mientras el panel que abre el botón sigue abierto. */
+.toolbar button.is-active {
+    background: rgba(213, 122, 102, 0.24);
+
+    color: var(--coral);
+}
+
+.dark-mode .toolbar button:hover {
+    background: rgba(255, 154, 143, 0.14);
+}
+
+.dark-mode .toolbar button.is-active {
+    background: rgba(255, 154, 143, 0.26);
+}
+
+.toolbar .bold {
+    font-weight: bold;
+}
+
+.toolbar .italic {
+    font-style: italic;
+}
+
+.toolbar .underline {
+    text-decoration: underline;
+}
+
+.toolbar .strike {
+    text-decoration: line-through;
+}
+
+.toolbar-divider {
+    width: 1px;
+
+    height: 20px;
+
+    background:
+        rgba(75,66,55,0.12);
+}
+
+
+/* =====================================================
+   PAPER
+===================================================== */
+
+.paper {
+    margin: 0;
+
+    flex: 1;
+
+    background: var(--paper);
+
+    position: relative;
+
+    overflow: hidden;
+
+    box-shadow:
+        inset 0 0 35px
+        rgba(75,66,55,0.05);
+}
+
+.paper-content {
+    position: relative;
+
+    padding:
+        40px 45px 30px;
+
+    height: 100%;
+
+    overflow: auto;
+    cursor: text;
+}
+
+/* Tipografía del contenido de la nota. El reset `* { margin:0; padding:0 }`
+   deja h2/ol/ul sin separación ni sangría, y los números de las listas
+   ordenadas se cortan contra el borde. */
+
+.paper-content h1,
+.paper-content h2,
+.paper-content h3 {
+    margin: 18px 0 10px;
+    line-height: 1.2;
+}
+
+.paper-content h1 { font-size: 1.75rem; }
+.paper-content h2 { font-size: 1.25rem; }
+.paper-content h3 { font-size: 1.0625rem; }
+
+.paper-content > *:first-child {
+    margin-top: 0;
+}
+
+.paper-content p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.paper-content ul,
+.paper-content ol {
+    margin: 0 0 12px;
+    padding-left: 24px;
+    line-height: 1.7;
+}
+
+.paper-content li {
+    margin-bottom: 4px;
+}
+
+.paper-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+
+/* Viven en .paper, no dentro de #editorContent, para sobrevivir a renderEditor() */
+/* Capa de decoración repartida por toda la hoja. Antes eran dos adornos
+   sueltos en una esquina; ahora forma un patrón. Va por encima del papel pero
+   con poca opacidad y sin capturar clics, así que no estorba al escribir. */
+.paper-pattern {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+
+    overflow: hidden;
+
+    pointer-events: none;
+
+    user-select: none;
+}
+
+.paper-pattern span {
+    position: absolute;
+
+    line-height: 1;
+
+    /* La opacidad la calcula patternOpacity() según lo claro que sea el fondo.
+       El contorno en el color de acento es lo que salva a las decoraciones
+       claras (nube, corazón blanco, estrella), que sin él se perdían: les da
+       silueta sea cual sea su propio color. */
+    opacity: var(--pattern-opacity, 0.24);
+
+    filter:
+        saturate(1.25)
+        drop-shadow(0 0 0.6px var(--note-accent, rgba(75, 66, 55, 0.6)))
+        drop-shadow(0 0 1.4px var(--note-accent, rgba(75, 66, 55, 0.4)));
+}
+
+.paper-content.note-background-lines {
+    background: repeating-linear-gradient(to bottom, var(--note-background-color, #FFF9F2) 0, var(--note-background-color, #FFF9F2) 31px, var(--note-line-color, #EBCFC1) 32px);
+}
+
+.paper-content.note-background-dots {
+    background-color: var(--note-background-color, #FFF9F2);
+    background-image: radial-gradient(var(--note-line-color, #D57A66) 1px, transparent 1px);
+    background-size: 12px 12px;
+}
+
+.paper-content.note-background-grid {
+    background-color: var(--note-background-color, #FFF9F2);
+    background-image: linear-gradient(var(--note-line-color, #EBCFC1) 1px, transparent 1px), linear-gradient(90deg, var(--note-line-color, #EBCFC1) 1px, transparent 1px);
+    background-size: 18px 18px;
+}
+
+.paper-content.note-background-flowers {
+    background-color: var(--note-background-color, #FFF9F2);
+    background-image: radial-gradient(circle at 20% 20%, rgba(213,122,102,0.12) 0 3px, transparent 4px), radial-gradient(circle at 80% 70%, rgba(202,102,128,0.12) 0 3px, transparent 4px);
+    background-size: 42px 42px;
+}
+
+/* FONDOS AÑADIDOS
+   Los cuatro siguen el acento de la nota como los anteriores, pero cubren mucha
+   más superficie que una línea de 1px, así que el color se rebaja con color-mix
+   antes de pintarlos: a la alfa completa de --note-line-color el texto perdía
+   legibilidad. */
+
+.paper-content.note-background-checks {
+    background-color: var(--note-background-color, #FFF9F2);
+    background-image:
+        repeating-linear-gradient(to right, color-mix(in srgb, var(--note-line-color, #EBCFC1) 45%, transparent) 0 16px, transparent 16px 32px),
+        repeating-linear-gradient(to bottom, color-mix(in srgb, var(--note-line-color, #EBCFC1) 45%, transparent) 0 16px, transparent 16px 32px);
+}
+
+.paper-content.note-background-diagonal {
+    background-color: var(--note-background-color, #FFF9F2);
+    background-image:
+        repeating-linear-gradient(45deg, var(--note-line-color, #EBCFC1) 0 1px, transparent 1px 17px),
+        repeating-linear-gradient(-45deg, var(--note-line-color, #EBCFC1) 0 1px, transparent 1px 17px);
+}
+
+.paper-content.note-background-waves {
+    background-color: var(--note-background-color, #FFF9F2);
+    background-image: radial-gradient(circle at 50% 100%, transparent 0 8px, var(--note-line-color, #EBCFC1) 8px 9px, transparent 9px);
+    background-size: 22px 11px;
+}
+
+.paper-content.note-background-clouds {
+    background-color: var(--note-background-color, #FFF9F2);
+    background-image:
+        radial-gradient(circle at 18% 30%, color-mix(in srgb, var(--note-line-color, #EBCFC1) 40%, transparent) 0 16px, transparent 17px),
+        radial-gradient(circle at 33% 24%, color-mix(in srgb, var(--note-line-color, #EBCFC1) 40%, transparent) 0 11px, transparent 12px),
+        radial-gradient(circle at 66% 64%, color-mix(in srgb, var(--note-line-color, #EBCFC1) 40%, transparent) 0 14px, transparent 15px),
+        radial-gradient(circle at 80% 58%, color-mix(in srgb, var(--note-line-color, #EBCFC1) 40%, transparent) 0 10px, transparent 11px);
+    background-size: 130px 96px;
+}
+
+.paper-content.note-style-post-it {
+    margin: 24px;
+    border-radius: 4px;
+    background-color: var(--note-background-color, #FFF1A8);
+    box-shadow: 4px 5px 0 rgba(75,66,55,0.12);
+}
+
+.paper-content.note-style-card {
+    margin: 24px;
+    border: 1px solid rgba(75,66,55,0.12);
+    border-radius: 12px;
+    background-color: var(--note-background-color, #FFF9F2);
+    box-shadow: 0 6px 20px rgba(75,66,55,0.12);
+}
+
+.paper-content.note-style-journal {
+    background-color: var(--note-background-color, #F7E6D2);
+    border-left: 8px solid var(--note-accent, var(--coral));
+}
+
+.selected-decoration {
+    box-shadow: 0 0 0 2px var(--coral), 0 2px 5px rgba(0,0,0,0.05) !important;
+}
+
+.editor-title strong[contenteditable] {
+    cursor: text;
+}
+
+
+/* HOLES */
+
+.paper-holes {
+    position: absolute;
+
+    left: 8px;
+
+    top: 35px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 74px;
+
+    z-index: 2;
+}
+
+.paper-holes span {
+    width: 14px;
+    height: 14px;
+
+    border-radius: 50%;
+
+    background: var(--background);
+
+    border:
+        1px solid
+        rgba(75,66,55,0.12);
+
+    box-shadow:
+        inset 1px 1px 3px
+        rgba(0,0,0,0.1);
+}
+
+
+/* El maquetado de receta (.recipe-heading, .recipe-photo, .ingredients,
+   .preparation) se eliminó junto con el HTML estático del editor: ese marcado
+   lo borraba renderEditor() en el primer render, así que nunca llegaba a verse.
+   El contenido de la nota se estiliza con .paper-content y sus descendientes. */
+
+/* .paper-decoration y .paper-heart se eliminaron: eran los dos adornos sueltos
+   que ahora sustituye .paper-pattern, repartido por toda la hoja. */
+
+
+/* EDITOR FOOTER */
+
+.editor-footer {
+    height: 43px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 0 18px;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.625rem;
+
+    border-top:
+        1px solid
+        rgba(75,66,55,0.08);
+
+    color: #7C6C65;
+}
+
+.editor-type {
+    background: #F8DDD4;
+
+    color: #B3544F;
+
+    border-radius: 12px;
+
+    padding:
+        5px 10px;
+}
+
+/* Da el marco de referencia al panel de categorías */
+.category-field {
+    position: relative;
+}
+
+/* Botón que abre el panel y muestra la categoría actual */
+.editor-category {
+    max-width: 150px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    padding: 4px 9px;
+
+    background: transparent;
+
+    color: inherit;
+
+    font: inherit;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    cursor: pointer;
+}
+
+.editor-category:hover {
+    border-color: var(--coral);
+}
+
+.editor-category .category-dot {
+    width: 8px;
+    height: 8px;
+
+    flex-shrink: 0;
+
+    border-color: rgba(75, 66, 55, 0.22);
+}
+
+/* Sube en vez de bajar: el pie es lo último del editor y hacia abajo no hay
+   sitio. Queda dentro del editor, así que su overflow no lo recorta. */
+.category-picker {
+    position: absolute;
+    bottom: calc(100% + 7px);
+    left: 0;
+    z-index: 3;
+
+    width: max-content;
+    max-width: min(260px, calc(100vw - 48px));
+
+    padding: 9px;
+
+    background: var(--paper);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    box-shadow: var(--sidebar-shadow);
+}
+
+.category-picker[hidden] {
+    display: none;
+}
+
+/* Solo los hijos directos, que son ♡ y 🗑. Sin el ">" esto alcanzaba también
+   al botón de categoría y a las pastillas de su panel, y les daba 20px, el
+   color coral y el margin-left:auto pensado para empujar ♡ a la derecha. */
+.editor-footer > button {
+    margin-left: auto;
+
+    background: transparent;
+
+    color: var(--coral);
+
+    font-size: 1.25rem;
+}
+
+
+/* =====================================================
+   CUSTOMIZE PANEL
+===================================================== */
+
+/* Panel flotante: se separa de los bordes en vez de pegarse al lateral */
+.float-panel {
+    display: none;
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    bottom: 14px;
+    /* Por encima del editor (60), que en móvil es una hoja a pantalla completa:
+       con z-index 40 el panel se abría detrás y parecía que no hacía nada. */
+    z-index: 70;
+    width: min(340px, calc(100vw - 28px));
+    height: auto;
+    background: var(--paper);
+
+    border: 1px solid var(--border);
+    border-radius: var(--panel-radius, 22px);
+
+    box-shadow: var(--sidebar-shadow);
+
+    padding: 18px 14px;
+
+    overflow-y: auto;
+}
+
+.float-panel.is-open {
+    display: block;
+}
+
+
+/* FORMA GALLETA
+   Mismo lenguaje que la nube del logo: bultos que SOBRESALEN del contorno, no
+   mordiscos hacia dentro. La máscara suma dos capas — un cuerpo interior y una
+   retícula de círculos — y la unión deja los bultos asomando por el perímetro.
+   El tamaño `round` ajusta la retícula para que quepa un número entero de
+   bultos por lado, así ninguno queda cortado.
+
+   Ni el borde ni box-shadow siguen a una máscara, por eso aquí se quitan y la
+   sombra pasa a filter: drop-shadow(), que sí respeta la silueta. */
+
+.shape-cookie .sidebar,
+.shape-cookie .editor,
+.shape-cookie .float-panel,
+.shape-cookie #newNoteDialog,
+.shape-cookie .note-card,
+.shape-cookie .create-card,
+.shape-cookie .panel {
+    /* --bulto es el radio del círculo (lo ancha que es la onda) y --asoma
+       cuánto sobresale. Separarlos es lo que suaviza la forma: círculos anchos
+       que apenas asoman dan una ondulación amplia y poco profunda, en vez de
+       medias lunas marcadas. */
+    --bulto: 14px;
+    --asoma: 5px;
+
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+
+    filter: drop-shadow(0 8px 18px rgba(75, 66, 55, 0.20));
+
+    mask:
+        radial-gradient(var(--bulto) at 50% 50%, #000 98%, #0000)
+            0 0 / calc(2 * var(--bulto)) calc(2 * var(--bulto)) round,
+        linear-gradient(#000 0 0)
+            50% 50% / calc(100% - 2 * var(--asoma)) calc(100% - 2 * var(--asoma)) no-repeat;
+}
+
+.dark-mode.shape-cookie .sidebar,
+.dark-mode.shape-cookie .editor,
+.dark-mode.shape-cookie .float-panel,
+.dark-mode.shape-cookie #newNoteDialog,
+.dark-mode.shape-cookie .note-card,
+.dark-mode.shape-cookie .create-card,
+.dark-mode.shape-cookie .panel {
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
+}
+
+/* Ondas algo menores en las tarjetas, que son mucho más pequeñas que los
+   paneles y necesitan una escala proporcional. */
+.shape-cookie .note-card,
+.shape-cookie .create-card,
+.shape-cookie .panel {
+    --bulto: 11px;
+    --asoma: 4px;
+}
+
+
+/* PERSONALIZAR LA APP
+   Comparte la caja flotante del panel de nota, solo cambia el contenido. */
+
+.palette-options {
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 8px;
+}
+
+.palette {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 8px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: var(--text);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.75rem;
+}
+
+.palette:hover {
+    background: rgba(213, 122, 102, 0.10);
+}
+
+.palette.selected-palette {
+    border-color: var(--coral);
+
+    background: rgba(213, 122, 102, 0.14);
+}
+
+.palette-chips {
+    display: flex;
+
+    flex-shrink: 0;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    border: 1px solid var(--border);
+}
+
+.palette-chips span {
+    width: 12px;
+    height: 20px;
+}
+
+.palette-name {
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+.app-name-input {
+    width: 100%;
+
+    height: 38px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    padding: 0 10px;
+
+    background: rgba(255, 249, 238, 0.78);
+
+    color: var(--text);
+
+    font: inherit;
+    font-size: 0.875rem;
+}
+
+/* Capa transparente para poder cerrar tocando fuera de la hoja. No atenúa nada:
+   la idea es seguir viendo la nota tal cual mientras se personaliza. */
+.sheet-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 65;
+    background: transparent;
+}
+
+.customize-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    border-bottom:
+        1px solid
+        rgba(75,66,55,0.08);
+
+    padding-bottom: 17px;
+
+    margin-bottom: 15px;
+}
+
+.customize-header h3 {
+    font-size: 1rem;
+
+    font-weight: 500;
+}
+
+.customize-header button {
+    background: transparent;
+
+    font-size: 1.25rem;
+}
+
+
+/* CUSTOM SECTIONS */
+
+.custom-section {
+    margin-bottom: 18px;
+}
+
+.custom-hint {
+    margin-top: 7px;
+
+    font-size: 0.75rem;
+
+    line-height: 1.4;
+
+    color: var(--muted);
+}
+
+.custom-section h4 {
+    font-family: Arial, sans-serif;
+
+    font-size: 0.8125rem;
+
+    margin-bottom: 9px;
+}
+
+
+/* LARGE COLORS */
+
+.color-options.large {
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.color-options.large .color {
+    width: 23px;
+    height: 23px;
+}
+
+.selected-color {
+    outline:
+        1px solid
+        var(--coral);
+
+    outline-offset: 3px;
+}
+
+
+/* LARGE BACKGROUNDS */
+
+.background-options.large {
+    gap: 5px;
+}
+
+/* Sin ancho fijo: cada muestra ocupa su columna de la rejilla */
+.background-options.large .background {
+    height: 38px;
+}
+
+
+/* VERTICAL STYLES */
+
+.style-options.vertical {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 6px;
+}
+
+.style-options.vertical button {
+    padding: 8px 4px;
+
+    border-radius: 5px;
+
+    background: #F4E7DC;
+
+    color: var(--brown);
+
+    font-size: 0.8125rem;
+}
+
+.style-options.vertical .selected {
+    border:
+        1px solid
+        #E98778;
+
+    color: #B74D4B;
+
+    background: #FFF0E9;
+}
+
+
+/* FONT */
+
+.font-selector {
+    height: 39px;
+
+    border:
+        1px solid
+        rgba(75,66,55,0.1);
+
+    border-radius: 7px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 0 10px;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.8125rem;
+}
+
+.font-selector span:last-child {
+    margin-left: auto;
+}
+
+
+/* FONT SIZE */
+
+.font-size {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    border:
+        1px solid
+        rgba(75,66,55,0.1);
+
+    border-radius: 7px;
+
+    height: 37px;
+}
+
+.font-size button {
+    width: 32px;
+    height: 100%;
+
+    background: transparent;
+
+    border-right:
+        1px solid
+        rgba(75,66,55,0.1);
+}
+
+.font-size button:last-child {
+    border-right: none;
+
+    border-left:
+        1px solid
+        rgba(75,66,55,0.1);
+}
+
+.font-size span {
+    font-family: Arial, sans-serif;
+
+    font-size: 0.875rem;
+}
+
+
+/* APPLY */
+
+.apply-button {
+    width: 100%;
+
+    height: 38px;
+
+    background:
+        #E97974;
+
+    color: white;
+
+    border-radius: 5px;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 0.875rem;
+
+    margin-top: 5px;
+
+    transition: 0.2s;
+}
+
+.apply-button:hover {
+    background: #D96764;
+
+    transform: translateY(-1px);
+}
+
+@keyframes sheet-up {
+    from {
+        /* Algo más del 100% para salir del todo por debajo del margen inferior */
+        transform: translateY(115%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .float-panel.is-open {
+        animation: none;
+    }
+}
+
+.dark-mode {
+    /* Base ciruela-marrón, no gris frío: el gris anterior (#29252A / #312B30)
+       chocaba con el burdeos del sidebar y dejaba una separación de solo 1.27.
+       Al oscurecerla y calentarla sube a ~1.55 y, sobre todo, pertenecen a la
+       misma familia de color. */
+    --background: #1E1619;
+    --surface: #261C21;
+    --paper: #35292E;
+    --text: #F9EEE6;
+    --muted: #D7BDB3;
+    --plum: #B982A0;
+    --brown: #E9DDD7;
+    --coral: #FF9A8F;
+    --border: rgba(249, 238, 230, 0.2);
+    --dark-surface: #302329;
+    --dark-surface-raised: #3B2C33;
+
+    /* Con el halo bajo el logo, el sidebar del modo oscuro ya puede ser oscuro
+       de verdad; antes era un malva claro que desentonaba con el resto. El modo
+       claro usa una versión más cálida y clara de este mismo burdeos. */
+    --sidebar: #5E2E3B;
+    --sidebar-text: #F3E3DC;
+    --sidebar-soft: #C69AA2;
+    --sidebar-hover: rgba(255, 255, 255, 0.10);
+    --sidebar-line: rgba(255, 255, 255, 0.14);
+    --sidebar-dot-line: rgba(255, 255, 255, 0.24);
+    --sidebar-shadow: 0 10px 30px rgba(0, 0, 0, 0.40);
+    --logo-halo: #F2E1D6;
+}
+
+.dark-mode .main,
+.dark-mode .editor,
+.dark-mode .float-panel {
+    background: var(--surface);
+}
+
+.dark-mode .paper,
+.dark-mode .search,
+.dark-mode #mobileFilter {
+    background: var(--paper);
+}
+
+.dark-mode .welcome h1,
+.dark-mode .welcome p,
+.dark-mode .section-heading h2,
+.dark-mode .top-actions button,
+.dark-mode .editor-title button,
+.dark-mode .toolbar button,
+.dark-mode .saved,
+.dark-mode .editor-footer,
+.dark-mode .customize-header h3,
+.dark-mode .custom-section h4,
+.dark-mode .font-selector,
+.dark-mode .font-size,
+.dark-mode .font-size span {
+    color: var(--text);
+}
+
+.dark-mode .search,
+.dark-mode #mobileFilter,
+.dark-mode .create-card,
+.dark-mode .bottom-panels .panel,
+.dark-mode .float-panel,
+.dark-mode .font-selector,
+.dark-mode .style-options button,
+.dark-mode .decorations button {
+    background: var(--dark-surface);
+    border-color: var(--border);
+}
+
+.dark-mode .create-card {
+    background: var(--dark-surface) !important;
+    color: var(--text) !important;
+}
+
+.dark-mode .search {
+    color: var(--text);
+}
+
+.dark-mode .search input,
+.dark-mode #mobileFilter,
+.dark-mode .font-selector,
+.dark-mode .style-options button,
+.dark-mode .decorations button,
+.dark-mode .font-size button {
+    color: var(--text);
+}
+
+.dark-mode .search input::placeholder,
+.dark-mode .section-heading button,
+.dark-mode .saved {
+    color: var(--muted);
+}
+
+.dark-mode .style-options .selected {
+    background: #59424B;
+    border-color: var(--coral);
+    color: #FFE5DF;
+}
+
+.dark-mode .calendar-header,
+.dark-mode .calendar-header button,
+.dark-mode .calendar-day {
+    color: var(--text);
+}
+
+.dark-mode .calendar-day.is-quiet {
+    color: rgba(249, 238, 230, 0.42);
+}
+
+.dark-mode button.calendar-day:hover {
+    background: rgba(255, 154, 143, 0.18);
+}
+
+.dark-mode .calendar-day.is-selected,
+.dark-mode button.calendar-day.is-selected:hover {
+    background: var(--coral);
+    color: #2A2226;
+}
+
+.dark-mode .calendar-dot.is-reminder {
+    background: var(--plum);
+}
+
+.dark-mode .reminders-title,
+.dark-mode .reminder-text,
+.dark-mode .reminder-form input {
+    color: var(--text);
+}
+
+.dark-mode .reminder {
+    background: rgba(249, 238, 230, 0.06);
+}
+
+.dark-mode .reminder-form input {
+    background: var(--dark-surface-raised);
+    border-color: var(--border);
+}
+
+.dark-mode .reminder-form-actions button {
+    background: var(--dark-surface-raised);
+    color: var(--text);
+}
+
+.dark-mode #reminderSubmit {
+    background: #D97870;
+    color: #241C20;
+}
+
+.dark-mode .calendar-day.is-selected .calendar-dot {
+    background: #2A2226;
+}
+
+.dark-mode .paper-content {
+    color: #30272C;
+}
+
+.dark-mode .editor-header,
+.dark-mode .toolbar,
+.dark-mode .editor-footer,
+.dark-mode .customize-header {
+    border-color: var(--border);
+}
+
+.dark-mode .customize-header button,
+.dark-mode .font-size button {
+    color: var(--text);
+}
+
+.dark-mode .apply-button {
+    background: #D97870;
+    color: #241C20;
+}
+
+.dark-mode .apply-button:hover {
+    background: #F08B81;
+}
+
+/* Ya no existe .travel-card, así que el :not() sobraba. */
+.dark-mode .note-card {
+    color: #30272C;
+    border: 1px solid rgba(249, 238, 230, 0.28);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.22);
+}
+
+.dark-mode .note-card .note-type {
+    color: #70434B;
+}
+
+.dark-mode .note-card .note-footer {
+    color: #594950;
+}
+
+.dark-mode .note-card .card-actions button {
+    color: #503E46;
+}
+
+.dark-mode .note-card .card-actions .card-delete {
+    color: #8F3F43;
+}
+
+.dark-mode .empty-state {
+    color: var(--muted);
+}
+
+.dark-mode .category-row:hover {
+    background: rgba(249, 238, 230, 0.08);
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1450px) {
+
+    .app {
+        grid-template-columns:
+            222px
+            minmax(430px, 1fr);
+    }
+
+    .app.editor-open {
+        grid-template-columns:
+            222px
+            minmax(430px, 1fr)
+            minmax(418px, 0.9fr);
+    }
+
+    .main {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .create-card {
+        min-height: 120px;
+    }
+
+    .paper-content h1 {
+        font-size: 1.5625rem;
+    }
+}
+
+
+/* El bloque 1200px va ANTES que el de 1050px: al revés, a 1000px ambos
+   coincidían y ganaba el último, así que el layout de 170px nunca se aplicaba. */
+
+@media (max-width: 1200px) {
+
+    .app {
+        grid-template-columns:
+            212px
+            minmax(0, 1fr);
+    }
+
+    .app.editor-open {
+        grid-template-columns:
+            212px
+            minmax(0, 1fr)
+            minmax(348px, 36vw);
+    }
+
+    .create-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+    .notes-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+}
+
+
+@media (max-width: 1050px) and (min-width: 951px) {
+
+    .app {
+        grid-template-columns:
+            192px
+            minmax(0, 1fr);
+    }
+
+    .app.editor-open {
+        grid-template-columns:
+            192px
+            minmax(0, 1fr)
+            328px;
+    }
+
+    .sidebar {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .logo-image {
+        width: 160px;
+        height: 160px;
+    }
+
+    .main {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .create-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+    .notes-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+}
+
+
+@media (max-width: 950px) {
+
+    .app {
+        display: block;
+
+        background: var(--background);
+    }
+
+    /* También flota en móvil, pero como barra horizontal: altura automática y
+       sin scroll interno, que aquí no tiene sentido. */
+    .sidebar {
+        position: sticky;
+
+        top: 8px;
+
+        height: auto;
+
+        margin: 8px;
+
+        border-radius: var(--panel-radius, 18px);
+
+        overflow: visible;
+
+        z-index: 20;
+
+        padding: 8px 14px;
+
+        flex-direction: row;
+
+        align-items: center;
+
+        gap: 12px;
+    }
+
+    /* Cabecera compacta: el logo a 96px se comía media pantalla de un móvil */
+    .logo {
+        width: 52px;
+        height: 52px;
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    .logo-image {
+        width: 52px;
+        height: 52px;
+    }
+
+    /* Sale del posicionamiento absoluto: ahora es un elemento más de la fila */
+    .new-button {
+        position: static;
+        width: auto;
+        height: 36px;
+        flex-shrink: 0;
+
+        padding: 0 14px;
+
+        margin: 0 0 0 auto;
+    }
+
+    /* Las alturas fijas son para que la rejilla del escritorio no se mueva al
+       graduar la letra. En móvil todo es una columna: congelarlas solo recorta
+       texto sin ganar nada, y a la barra superior (que aquí se apila) la
+       aplastaba de 113px a 39. */
+    .topbar,
+    .welcome,
+    .section-heading,
+    .nav-item,
+    .category,
+    .note-card,
+    .panel {
+        height: auto;
+    }
+
+    .note-card {
+        min-height: 190px;
+    }
+
+    .panel {
+        min-height: auto;
+    }
+
+    .note-preview {
+        flex: 0 1 auto;
+        max-height: 160px;
+    }
+
+    /* En móvil el sidebar es una barra horizontal y no cabe la navegación: el
+       filtrado (categorías incluidas) pasa por #mobileFilter. Crear o editar
+       categorías se queda para el escritorio. */
+    .main-nav,
+    .category-title,
+    .category-form,
+    .categories,
+    .customize-sidebar {
+        display: none;
+    }
+
+    .solo-movil {
+        display: block;
+    }
+
+    /* El formulario de recordatorios (hora, texto, 16 colores y el botón) se
+       lleva ~180px. Ahora que el panel está en lo alto de la página, arranca
+       plegado: lo que se viene a mirar es qué hay para hoy, no a escribir. */
+    .reminders-panel .reminder-form {
+        display: none;
+    }
+
+    .reminders-panel.form-abierto .reminder-form {
+        display: flex;
+    }
+
+    .reminders-panel.form-abierto .reminder-add {
+        display: none;
+    }
+
+    /* Borde continuo y no discontinuo: con border-radius, Chromium reparte los
+       guiones por lado y las esquinas empiezan su propia serie, así que los
+       empalmes salían desiguales. El radio es el de los campos del formulario
+       que hay justo debajo al desplegarlo. */
+    .reminder-add {
+        width: 100%;
+
+        padding: 10px;
+
+        border: 1px solid var(--border);
+        border-radius: 7px;
+
+        background: transparent;
+
+        color: var(--plum);
+
+        font-family: Arial, sans-serif;
+        font-size: 0.8125rem;
+
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    .reminder-add:hover {
+        border-color: var(--coral);
+
+        background: rgba(213, 122, 102, 0.08);
+    }
+
+    .main {
+        padding: 18px 20px 24px;
+    }
+
+    /* El editor va después de .main en el documento, así que al abrir una nota
+       aparecía fuera de pantalla y parecía que el toque no hacía nada. En móvil
+       se comporta como una hoja a pantalla completa. */
+    .editor {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        width: 100%;
+
+        /* Anula el panel flotante del escritorio: para escribir en el móvil,
+           con el teclado en pantalla, conviene aprovechar todo el alto.
+           El alto va explícito porque con `height: auto` el navegador no
+           estiraba la hoja hasta `bottom` y se quedaba en la altura del
+           contenido. dvh sigue a la barra del navegador móvil. */
+        margin: 0;
+        height: 100vh;
+        height: 100dvh;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .editor .paper {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    /* Bloquea el desplazamiento del fondo mientras la hoja está abierta */
+    body.editor-open {
+        overflow: hidden;
+    }
+
+    .editor-header .back {
+        font-size: 1.75rem;
+    }
+
+    .editor-header {
+        min-height: 64px;
+        height: auto;
+        padding: 12px 15px;
+        gap: 10px;
+    }
+
+    .editor-title {
+        min-width: 0;
+        gap: 7px;
+    }
+
+    .editor-title strong {
+        overflow-wrap: anywhere;
+    }
+
+    .saved {
+        flex-shrink: 0;
+    }
+
+    /* Los botones no caben en 390px. Antes la barra se desplazaba en horizontal
+       y había que anclar los dos últimos para que no se perdieran; ahora
+       simplemente pasa a dos filas y todo queda a la vista de golpe. */
+    .toolbar {
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+        overflow: visible;
+        height: auto;
+        min-height: 46px;
+        gap: 6px 10px;
+        padding: 7px 12px;
+    }
+
+    /* Al repartirse en filas, un separador podría caer al principio de una */
+    .toolbar-divider {
+        display: none;
+    }
+
+    .paper-content {
+        height: auto;
+        min-height: 100%;
+        padding: 26px 20px;
+    }
+
+    /* Decoración que en pantalla estrecha se solapaba con el texto */
+    .paper-holes {
+        display: none;
+    }
+
+
+    /* HOJA INFERIOR DE PERSONALIZACIÓN
+       En vez de tapar la pantalla entera, sube desde abajo y deja ver la nota
+       que se está personalizando. */
+
+    .sheet-backdrop.is-open {
+        display: block;
+    }
+
+    /* Tarjeta flotante despegada de los bordes, con el mismo lenguaje de
+       esquinas y sombra que el resto de paneles de la página. */
+    .float-panel {
+        top: auto;
+        /* env() deja hueco al indicador de inicio del iPhone */
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        left: 12px;
+        right: 12px;
+
+        width: auto;
+        height: auto;
+        max-height: 58vh;
+        max-height: 58dvh;
+
+        border: 1px solid var(--border);
+        border-radius: var(--panel-radius, 18px);
+
+        box-shadow: 0 12px 34px rgba(75, 66, 55, 0.26);
+
+        padding: 0 14px 14px;
+
+        overflow-y: auto;
+
+        /* Evita que el desplazamiento se propague al fondo al llegar al tope */
+        overscroll-behavior: contain;
+    }
+
+    /* Secciones más juntas: con la hoja más baja, cuanto menos haya que
+       desplazar, mejor. */
+    .custom-section {
+        margin-bottom: 12px;
+    }
+
+    .custom-section h4 {
+        margin-bottom: 6px;
+    }
+
+    /* Rejilla de 8 columnas en vez de medidas fijas: los 16 colores quedan en
+       dos filas exactas a cualquier ancho de móvil, encogiendo lo justo. Con
+       tamaños fijos la última muestra saltaba sola a otra línea. */
+    .color-options.large {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 7px;
+        justify-items: center;
+    }
+
+    .color-options.large .color {
+        width: 100%;
+        max-width: 28px;
+        height: auto;
+        aspect-ratio: 1;
+    }
+
+    /* Tirador */
+    .float-panel::before {
+        content: "";
+        display: block;
+        width: 40px;
+        height: 4px;
+        margin: 10px auto 2px;
+        border-radius: 2px;
+        background: rgba(75, 66, 55, 0.25);
+    }
+
+    .float-panel.is-open {
+        animation: sheet-up 0.22s ease-out;
+    }
+
+    /* Cabecera y acción principal siempre visibles aunque se desplace */
+    .customize-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: inherit;
+        padding-top: 8px;
+    }
+
+    .apply-button {
+        position: sticky;
+        bottom: 0;
+        height: 44px;
+        margin-top: 12px;
+    }
+
+    .editor-footer {
+        min-height: 48px;
+        padding: 10px 15px;
+    }
+
+    .topbar {
+        margin-bottom: 25px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .search {
+        width: 100%;
+    }
+
+    .filter-field {
+        display: block;
+    }
+
+    /* Antes se ocultaba .top-actions entera. Descargar la copia y cambiar el tema
+       deben seguir accesibles en móvil; solo se oculta el botón sin función. */
+    .top-actions {
+        justify-content: flex-end;
+        gap: 22px;
+    }
+
+    /* Se ocultaba cuando era un duplicado sin función; ahora abre los ajustes
+       de la app, así que también hace falta en móvil. */
+
+    .create-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+    /* REORDEN DE LA COLUMNA
+       El orden del escritorio no vale aquí. Los recordatorios eran lo último de
+       la página (a 2021px de 2319): había que pasar por delante de todas las
+       notas para ver lo de hoy, y cuantas más notas tuvieras, más abajo caían.
+       Suben justo debajo del saludo; el calendario, que se consulta menos, se
+       queda al final. */
+    .main {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Deshace la caja para poder ordenar calendario y recordatorios por
+       separado: dentro de .bottom-panels son hermanos y no se podían partir. */
+    .bottom-panels {
+        display: contents;
+    }
+
+    .topbar          { order: 1; }
+    .welcome         { order: 2; margin-bottom: 18px; }
+    .reminders-panel { order: 3; margin-bottom: 26px; }
+    .recent-section  { order: 4; }
+    .calendar-panel  { order: 5; margin-top: 26px; }
+
+    /* Las cinco tarjetas de crear se llevaban 248px de la primera pantalla
+       haciendo lo mismo que el botón "Crear nuevo" de la barra, que desde que
+       tiene selector de tipo ya ofrece las cinco opciones. Sin ellas, la
+       pregunta del saludo se queda sin respuesta, así que también se va. */
+    .create-grid,
+    .welcome p {
+        display: none;
+    }
+
+    /* ZONAS TÁCTILES
+       Con el ratón basta un icono de 22px; con el dedo no. */
+
+    .card-actions {
+        gap: 4px;
+    }
+
+    .card-actions button,
+    .reminder-actions button {
+        min-width: 38px;
+        min-height: 38px;
+        padding: 8px;
+    }
+
+    /* 40px para el dedo, pero nunca más que su columna: en un móvil de 320px
+       siete celdas de 40 no caben (304px en 273) y el domingo se cortaba. */
+    .calendar-day {
+        width: min(40px, 100%);
+        height: auto;
+
+        aspect-ratio: 1;
+    }
+
+    .calendar-header button {
+        width: 38px;
+        height: 38px;
+    }
+
+    .reminder-check {
+        width: 24px;
+        height: 24px;
+    }
+
+    .reminder {
+        padding: 10px;
+    }
+
+    .editor-footer button,
+    .toolbar button {
+        min-width: 36px;
+        min-height: 36px;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .main {
+        padding: 15px;
+    }
+
+    .welcome h1 {
+        font-size: 1.5rem;
+    }
+
+    /* 3 columnas para que las 5 tarjetas queden 3 + 2 en vez de 2 + 2 + 1
+       huérfana, y más bajas: 133px es mucho alto para un móvil. */
+    .create-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .create-card {
+        height: 96px;
+        gap: 0;
+    }
+
+    .create-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1.25rem;
+        margin-bottom: 5px;
+    }
+
+    .create-card span:not(.create-icon) {
+        font-size: 0.6875rem;
+    }
+
+    .create-card strong {
+        font-size: 0.8125rem;
+    }
+
+    .notes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* La fila de acciones ocupa el ancho en vez de amontonarse a la derecha */
+    .top-actions {
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .sidebar {
+        padding: 7px 12px;
+        gap: 10px;
+    }
+
+    .float-panel {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    /* Antes se ocultaban los dos paneles. Ahora los dos son funcionales
+       (calendario y recordatorios), así que se quedan apilados. */
+    .panel {
+        padding: 15px;
+    }
+}

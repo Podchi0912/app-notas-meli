@@ -1,0 +1,969 @@
+/* =========================================================
+   MI CUADERNITO
+   LOGO
+========================================================= */
+
+
+/* ---------------------------------------------------------
+   PALETA ORIGINAL
+--------------------------------------------------------- */
+
+:root {
+
+    --plum: #713E5A;
+
+    --brown: #4B4237;
+
+    --cream: #EDC79B;
+
+    --coral: #D57A66;
+
+    --pink: #CA6680;
+
+    --background: #FFF7EF;
+
+}
+
+
+/* ---------------------------------------------------------
+   RESET
+--------------------------------------------------------- */
+
+* {
+    margin: 0;
+    padding: 0;
+
+    box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   BODY
+--------------------------------------------------------- */
+
+body {
+
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    background: var(--background);
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+}
+
+
+/* ---------------------------------------------------------
+   CONTENEDOR DEL LOGO
+--------------------------------------------------------- */
+
+.logo-container {
+
+    position: relative;
+
+    width: 600px;
+
+    height: 600px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+}
+
+
+/* ---------------------------------------------------------
+   CÍRCULO EXTERIOR
+--------------------------------------------------------- */
+
+.circle-decoration {
+
+    position: absolute;
+
+    inset: 35px;
+
+    width: calc(100% - 70px);
+
+    height: calc(100% - 70px);
+
+    overflow: visible;
+
+}
+
+
+/* círculo */
+
+.circle-decoration path {
+
+    fill: none;
+
+    stroke: var(--plum);
+
+    stroke-width: 4;
+
+    stroke-linecap: round;
+
+    stroke-linejoin: round;
+
+}
+
+
+/* ---------------------------------------------------------
+   BRAND
+--------------------------------------------------------- */
+
+.brand {
+
+    position: absolute;
+
+    top: 145px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: 500px;
+
+    text-align: center;
+
+}
+
+
+/* ---------------------------------------------------------
+   "MI"
+--------------------------------------------------------- */
+
+.brand-mi {
+
+    position: relative;
+
+    display: inline-block;
+
+    color: var(--plum);
+
+    font-family:
+
+        "Brush Script MT",
+
+        "Segoe Script",
+
+        cursive;
+
+    font-size: 118px;
+
+    line-height: 0.9;
+
+    font-weight: 500;
+
+    letter-spacing: -6px;
+
+}
+
+
+/* ---------------------------------------------------------
+   CORAZÓN SOBRE LA I
+--------------------------------------------------------- */
+
+.tiny-heart {
+
+    position: absolute;
+
+    right: -3px;
+
+    top: -7px;
+
+    color: var(--pink);
+
+    font-family: Georgia, serif;
+
+    font-size: 25px;
+
+    transform: rotate(-10deg);
+
+}
+
+
+/* ---------------------------------------------------------
+   "CUADERNITO"
+--------------------------------------------------------- */
+
+.brand-name {
+
+    color: var(--brown);
+
+    font-family:
+
+        Georgia,
+
+        "Times New Roman",
+
+        serif;
+
+    font-size: 62px;
+
+    font-weight: 700;
+
+    line-height: 1;
+
+    margin-top: 4px;
+
+    letter-spacing: -3px;
+
+}
+
+
+/* ---------------------------------------------------------
+   LÍNEA DE PINTURA
+--------------------------------------------------------- */
+
+.brush-line {
+
+    position: relative;
+
+    width: 365px;
+
+    height: 35px;
+
+    margin:
+
+        10px auto 0;
+
+}
+
+
+/* línea principal */
+
+.brush-line span {
+
+    position: absolute;
+
+    left: 0;
+
+    top: 15px;
+
+    width: 330px;
+
+    height: 7px;
+
+    background: var(--coral);
+
+    border-radius: 50%;
+
+    transform: rotate(-3deg);
+
+}
+
+
+/* pequeña irregularidad */
+
+.brush-line span::after {
+
+    content: "";
+
+    position: absolute;
+
+    right: -8px;
+
+    top: -1px;
+
+    width: 20px;
+
+    height: 5px;
+
+    background: var(--coral);
+
+    border-radius: 50%;
+
+}
+
+
+/* corazón final */
+
+.line-heart {
+
+    position: absolute;
+
+    right: 0;
+
+    top: 0;
+
+    color: var(--coral);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 38px;
+
+    line-height: 1;
+
+    transform: rotate(-8deg);
+
+}
+
+
+/* ---------------------------------------------------------
+   CORAZÓN GRANDE SUPERIOR
+--------------------------------------------------------- */
+
+.big-heart {
+
+    position: absolute;
+
+    width: 100px;
+
+    height: 90px;
+
+    right: 120px;
+
+    top: 98px;
+
+    transform:
+        rotate(8deg);
+}
+
+
+.big-heart svg {
+
+    width: 100%;
+
+    height: 100%;
+
+    overflow: visible;
+
+}
+
+
+/* relleno suave */
+
+.big-heart svg path {
+
+    fill: rgba(213, 122, 102, 0.23);
+
+    stroke: var(--pink);
+
+    stroke-width: 4;
+
+    stroke-linejoin: round;
+
+}
+
+
+/* ---------------------------------------------------------
+   ESTRELLAS
+--------------------------------------------------------- */
+
+.sparkle {
+
+    position: absolute;
+
+    font-family: Georgia, serif;
+
+    font-size: 40px;
+
+    color: var(--cream);
+
+}
+
+
+.sparkle-left {
+
+    left: 82px;
+
+    top: 210px;
+
+}
+
+
+.sparkle-right {
+
+    right: 82px;
+
+    top: 210px;
+
+    color: var(--coral);
+
+    font-size: 34px;
+
+}
+
+
+/* ---------------------------------------------------------
+   PUNTITOS
+--------------------------------------------------------- */
+
+.small-dot {
+
+    position: absolute;
+
+    width: 11px;
+
+    height: 11px;
+
+    border-radius: 50%;
+
+}
+
+
+.dot-one {
+
+    background: var(--pink);
+
+    top: 70px;
+
+    left: 50%;
+
+}
+
+
+.dot-two {
+
+    background: var(--coral);
+
+    bottom: 150px;
+
+    left: 100px;
+
+}
+
+
+.dot-three {
+
+    background: var(--cream);
+
+    bottom: 120px;
+
+    right: 110px;
+
+}
+
+
+/* ---------------------------------------------------------
+   LÍNEAS CORAL
+--------------------------------------------------------- */
+
+.coral-lines {
+
+    position: absolute;
+
+    left: 90px;
+
+    top: 170px;
+
+    width: 70px;
+
+    height: 70px;
+
+    transform: rotate(-20deg);
+
+}
+
+
+.coral-lines span {
+
+    display: block;
+
+    width: 35px;
+
+    height: 7px;
+
+    margin: 11px;
+
+    background: var(--coral);
+
+    border-radius: 20px;
+
+}
+
+
+.coral-lines span:nth-child(1) {
+
+    transform: rotate(45deg);
+
+}
+
+
+.coral-lines span:nth-child(2) {
+
+    transform: rotate(0deg);
+
+}
+
+
+.coral-lines span:nth-child(3) {
+
+    transform: rotate(-45deg);
+
+}
+
+
+/* ---------------------------------------------------------
+   CUADERNO
+--------------------------------------------------------- */
+
+.notebook {
+
+    position: absolute;
+
+    left: 50%;
+
+    bottom: 54px;
+
+    width: 180px;
+
+    height: 190px;
+
+    transform:
+
+        translateX(-50%)
+
+        rotate(-8deg);
+
+}
+
+
+/* ---------------------------------------------------------
+   PÁGINAS
+--------------------------------------------------------- */
+
+.notebook-pages {
+
+    position: absolute;
+
+    left: 20px;
+
+    bottom: 0;
+
+    width: 145px;
+
+    height: 170px;
+
+    background: #F8E7CE;
+
+    border-radius:
+        8px
+        12px
+        12px
+        8px;
+
+    border:
+        2px solid
+        rgba(75,66,55,0.25);
+
+    box-shadow:
+
+        5px 4px 0
+        #D9B997,
+
+        9px 8px 0
+        rgba(75,66,55,0.16);
+
+}
+
+
+/* ---------------------------------------------------------
+   CUADERNO PORTADA
+--------------------------------------------------------- */
+
+.notebook-cover {
+
+    position: absolute;
+
+    z-index: 5;
+
+    left: 12px;
+
+    top: 0;
+
+    width: 150px;
+
+    height: 170px;
+
+    background: var(--cream);
+
+    border:
+
+        2px solid
+        var(--brown);
+
+    border-radius: 10px;
+
+    box-shadow:
+
+        4px 4px 0
+        rgba(75,66,55,0.18);
+
+}
+
+
+/* ---------------------------------------------------------
+   BORDE PUNTEADO DEL CUADERNO
+--------------------------------------------------------- */
+
+.notebook-dashed {
+
+    position: absolute;
+
+    inset: 11px;
+
+    border:
+
+        2px dashed
+        rgba(75,66,55,0.25);
+
+    border-radius: 6px;
+
+}
+
+
+/* ---------------------------------------------------------
+   ANILLAS
+--------------------------------------------------------- */
+
+.notebook-rings {
+
+    position: absolute;
+
+    left: -14px;
+
+    top: 17px;
+
+    height: 140px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    z-index: 10;
+
+}
+
+
+.notebook-rings span {
+
+    width: 25px;
+
+    height: 15px;
+
+    border:
+
+        3px solid
+        var(--brown);
+
+    border-right: none;
+
+    border-radius:
+
+        10px
+        0
+        0
+        10px;
+
+    background: transparent;
+
+}
+
+
+/* ---------------------------------------------------------
+   CORAZÓN DEL CUADERNO
+--------------------------------------------------------- */
+
+.notebook-heart {
+
+    position: absolute;
+
+    top: 60px;
+
+    left: 57px;
+
+    font-family: Arial, sans-serif;
+
+    color: var(--coral);
+
+    font-size: 42px;
+
+    z-index: 4;
+
+}
+
+
+/* ---------------------------------------------------------
+   MARCAPÁGINAS
+--------------------------------------------------------- */
+
+.bookmark {
+
+    position: absolute;
+
+    z-index: 20;
+
+    bottom: -18px;
+
+    left: 88px;
+
+    width: 24px;
+
+    height: 38px;
+
+    background: var(--plum);
+
+}
+
+
+.bookmark::after {
+
+    content: "";
+
+    position: absolute;
+
+    bottom: 0;
+
+    left: 0;
+
+    border-left:
+        12px solid transparent;
+
+    border-right:
+        12px solid transparent;
+
+    border-bottom:
+        9px solid #F8E7CE;
+
+}
+
+
+/* ---------------------------------------------------------
+   RAMITA
+--------------------------------------------------------- */
+
+.branch {
+
+    position: absolute;
+
+    width: 90px;
+
+    height: 135px;
+
+    bottom: 74px;
+
+    right: 150px;
+
+    transform: rotate(7deg);
+
+}
+
+
+.branch-line {
+
+    fill: none;
+
+    stroke: var(--brown);
+
+    stroke-width: 2.5;
+
+    stroke-linecap: round;
+
+}
+
+
+.leaf {
+
+    fill: none;
+
+    stroke: var(--brown);
+
+    stroke-width: 2.3;
+
+}
+
+
+/* ---------------------------------------------------------
+   RAMA CON FRUTITOS
+--------------------------------------------------------- */
+
+.berry-branch {
+
+    position: absolute;
+
+    width: 90px;
+
+    height: 110px;
+
+    right: 105px;
+
+    bottom: 75px;
+
+    transform: rotate(8deg);
+
+}
+
+
+.berry-branch path {
+
+    fill: none;
+
+    stroke: var(--brown);
+
+    stroke-width: 2;
+
+    stroke-linecap: round;
+
+}
+
+
+.berry-branch circle {
+
+    fill: var(--coral);
+
+}
+
+
+/* ---------------------------------------------------------
+   CORAZÓN INFERIOR
+--------------------------------------------------------- */
+
+.bottom-heart {
+
+    position: absolute;
+
+    bottom: 90px;
+
+    left: 105px;
+
+    color: var(--pink);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 28px;
+
+    transform: rotate(-12deg);
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 650px) {
+
+    .logo-container {
+
+        width: 95vw;
+
+        height: 95vw;
+
+        max-width: 600px;
+
+        max-height: 600px;
+
+    }
+
+
+    .brand {
+
+        width: 85%;
+
+        top: 24%;
+
+    }
+
+
+    .brand-mi {
+
+        font-size: 19vw;
+
+    }
+
+
+    .brand-name {
+
+        font-size: 10vw;
+
+    }
+
+
+    .brush-line {
+
+        width: 60vw;
+
+    }
+
+
+    .brush-line span {
+
+        width: 52vw;
+
+    }
+
+
+    .notebook {
+
+        transform:
+
+            translateX(-50%)
+
+            rotate(-8deg)
+
+            scale(.8);
+
+        bottom: 6%;
+
+    }
+
+
+    .big-heart {
+
+        transform:
+
+            rotate(8deg)
+
+            scale(.75);
+
+        right: 14%;
+
+        top: 14%;
+
+    }
+
+
+    .branch {
+
+        transform:
+
+            rotate(7deg)
+
+            scale(.75);
+
+        right: 21%;
+
+        bottom: 12%;
+
+    }
+
+
+    .berry-branch {
+
+        transform:
+
+            rotate(8deg)
+
+            scale(.7);
+
+        right: 12%;
+
+        bottom: 11%;
+
+    }
+
+}
