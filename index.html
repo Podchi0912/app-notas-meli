@@ -533,9 +533,16 @@
             <p class="cuenta-estado" id="cuentaEstado">Solo en este aparato</p>
 
             <form class="cuenta-form" id="cuentaForm" hidden>
-                <input id="cuentaCorreo" type="email" autocomplete="email" inputmode="email"
+                <!-- autocomplete en condiciones para que el navegador ofrezca
+                     guardar la contraseña: así solo se escribe la primera vez -->
+                <input id="cuentaCorreo" type="email" autocomplete="username" inputmode="email"
                        placeholder="tu@correo.com" aria-label="Tu correo" required>
-                <button type="submit" id="cuentaEntrar">Enviar enlace</button>
+                <input id="cuentaClave" type="password" autocomplete="current-password"
+                       placeholder="Contraseña" aria-label="Contraseña">
+                <div class="cuenta-form-botones">
+                    <button type="submit" id="cuentaEntrar">Entrar</button>
+                    <button type="button" id="cuentaEnlace">Prefiero un enlace al correo</button>
+                </div>
             </form>
 
             <div class="cuenta-acciones" id="cuentaAcciones" hidden>

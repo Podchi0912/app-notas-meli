@@ -53,6 +53,8 @@
     const cajaEstado = document.querySelector("#cuentaEstado");
     const formulario = document.querySelector("#cuentaForm");
     const campoCorreo = document.querySelector("#cuentaCorreo");
+    const campoClave = document.querySelector("#cuentaClave");
+    const botonEnlace = document.querySelector("#cuentaEnlace");
     const botonEntrar = document.querySelector("#cuentaEntrar");
     const acciones = document.querySelector("#cuentaAcciones");
     const botonSalir = document.querySelector("#cuentaSalir");
@@ -156,7 +158,31 @@
         }
     }
 
-    // Manda el correo con el enlace de entrada
+    // Entrada normal, con contraseña. Es la de siempre porque no depende del
+    // correo: ni esperas, ni límite de envíos, ni enlaces caducados. La
+    // contraseña la escribe ella y no está en ninguna parte de la página; si
+    // estuviera, cualquiera que abriese la web entraría en el cuaderno.
+    async function entrarConClave(correo, secreto) {
+        const respuesta = await fetch(API + "/auth/v1/token?grant_type=password", {
+            method: "POST",
+            headers: { apikey: CLAVE, "Content-Type": "application/json" },
+            body: JSON.stringify({ email: correo, password: secreto })
+        });
+        if (!respuesta.ok) {
+            const detalle = await textoDelError(respuesta);
+            if (/invalid login/i.test(detalle)) throw new Error("Correo o contraseña incorrectos.");
+            if (/not confirmed/i.test(detalle)) throw new Error("Ese correo está sin confirmar en Supabase.");
+            throw new Error(detalle);
+        }
+        const datos = await respuesta.json();
+        guardarSesion({
+            acceso: datos.access_token,
+            refresco: datos.refresh_token || "",
+            expira: Date.now() + (Number(datos.expires_in) || 3600) * 1000
+        });
+    }
+
+    // Manda el correo con el enlace de entrada (por si olvida la contraseña)
     async function pedirEnlace(correo) {
         const destino = location.origin + location.pathname;
         const respuesta = await fetch(API + "/auth/v1/otp?redirect_to=" + encodeURIComponent(destino), {
@@ -507,6 +533,17 @@
 
     /* ================================ pantalla ============================ */
 
+    function ocupado(boton, texto) {
+        boton.disabled = true;
+        boton.dataset.textoOriginal = boton.dataset.textoOriginal || boton.textContent;
+        boton.textContent = texto;
+    }
+
+    function libre(boton, texto) {
+        boton.disabled = false;
+        boton.textContent = texto || boton.dataset.textoOriginal || boton.textContent;
+    }
+
     function hace(marca) {
         const segundos = Math.round((Date.now() - marca) / 1000);
         if (segundos < 60) return "hace un momento";
@@ -537,7 +574,7 @@
             cajaEstado.className = "cuenta-estado";
             if (pista) {
                 pista.textContent = aviso
-                    || "Escribe tu correo y te llega un enlace para entrar. No hay contraseña que recordar.";
+                    || "Entra con tu correo y tu contraseña. Solo hace falta una vez en cada aparato: después se queda entrada.";
                 pista.classList.toggle("cuenta-mal", avisoMalo);
             }
             return;
@@ -590,9 +627,41 @@
         formulario.addEventListener("submit", async (evento) => {
             evento.preventDefault();
             const correo = (campoCorreo.value || "").trim();
+            const secreto = campoClave ? campoClave.value : "";
             if (!correo) return;
-            botonEntrar.disabled = true;
-            botonEntrar.textContent = "Enviando…";
+            if (!secreto) {
+                aviso = "Escribe también la contraseña, o pide un enlace al correo.";
+                avisoMalo = true;
+                pintar();
+                return;
+            }
+            ocupado(botonEntrar, "Entrando…");
+            try {
+                await entrarConClave(correo, secreto);
+                if (campoClave) campoClave.value = "";
+                aviso = "";
+                avisoMalo = false;
+                pintar();
+                sincronizar();
+            } catch (error) {
+                aviso = error && error.message ? error.message : "No se pudo entrar.";
+                avisoMalo = true;
+            }
+            libre(botonEntrar, "Entrar");
+            pintar();
+        });
+    }
+
+    if (botonEnlace) {
+        botonEnlace.addEventListener("click", async () => {
+            const correo = (campoCorreo.value || "").trim();
+            if (!correo) {
+                aviso = "Escribe primero tu correo.";
+                avisoMalo = true;
+                pintar();
+                return;
+            }
+            ocupado(botonEnlace, "Enviando…");
             try {
                 await pedirEnlace(correo);
                 aviso = "Te mandé un enlace a " + correo + ". Ábrelo desde este mismo aparato.";
@@ -601,8 +670,7 @@
                 aviso = error && error.message ? error.message : "No se pudo enviar el correo.";
                 avisoMalo = true;
             }
-            botonEntrar.disabled = false;
-            botonEntrar.textContent = "Enviar enlace";
+            libre(botonEnlace, "Prefiero un enlace al correo");
             pintar();
         });
     }

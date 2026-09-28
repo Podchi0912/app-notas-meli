@@ -50,7 +50,10 @@ Si además se entra con el correo, ese mismo cuaderno se copia a Supabase y se
 sincroniza con los demás aparatos. Los detalles están comentados arriba del
 todo en `nube.js`, pero en resumen:
 
-- La entrada es por enlace al correo, sin contraseña.
+- Se entra con correo y contraseña, y la sesión se queda guardada: solo hay
+  que escribirla una vez en cada aparato. Queda también la entrada por enlace
+  al correo, de repuesto. La contraseña no está en el código: si estuviera,
+  cualquiera que abriese la página entraría en el cuaderno.
 - Cada aparato guarda una huella corta de cada nota para saber qué cambió aquí
   desde la última subida, sin tener que duplicar el cuaderno entero.
 - Lo borrado se sube marcado como borrado, no se quita la fila: si se quitara,

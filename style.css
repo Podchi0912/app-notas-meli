@@ -3907,14 +3907,16 @@ button.calendar-day.is-selected:hover {
     background: none;
 }
 
+/* Dos campos apilados y debajo los botones: en el ancho de un móvil, correo y
+   contraseña en la misma fila no caben sin quedarse en un palmo cada uno. */
 .cuenta-form {
-    display: flex;
+    display: grid;
 
     gap: 7px;
 }
 
 .cuenta-form input {
-    flex: 1;
+    width: 100%;
 
     /* Sin esto el campo no baja de su ancho natural y desborda el panel */
     min-width: 0;
@@ -3934,14 +3936,22 @@ button.calendar-day.is-selected:hover {
     font-size: 0.875rem;
 }
 
-.cuenta-form button {
+.cuenta-form-botones {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+#cuentaEntrar {
     flex-shrink: 0;
 
     height: 38px;
 
     border-radius: 7px;
 
-    padding: 0 12px;
+    padding: 0 18px;
 
     background: var(--cta, var(--coral));
 
@@ -3951,8 +3961,40 @@ button.calendar-day.is-selected:hover {
     font-size: 0.75rem;
 }
 
-.cuenta-form button:hover {
+#cuentaEntrar:hover {
     background: var(--cta-hover, var(--coral));
+}
+
+/* El enlace al correo es el repuesto, para cuando se olvide la contraseña: se
+   ve como un enlace y no como un segundo botón, para que no compitan. */
+#cuentaEnlace {
+    flex: 1;
+
+    min-width: 0;
+
+    border: 0;
+
+    /* Alto de dedo: como texto suelto se quedaba en 16px de zona tocable */
+    padding: 9px 0;
+
+    background: none;
+
+    color: color-mix(in srgb, var(--muted) 45%, var(--text));
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+
+    line-height: 1.3;
+
+    text-align: left;
+
+    text-decoration: underline;
+
+    text-underline-offset: 2px;
+}
+
+#cuentaEnlace:hover {
+    color: var(--text);
 }
 
 .cuenta-form button:disabled {
