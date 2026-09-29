@@ -1363,6 +1363,24 @@ body.dark-mode .icon-moon {
 
 /* Un anillo en vez de agrandarla: el círculo está pegado al borde de la barra
    y al crecer se salía. El hueco lo da la primera sombra, del color del panel. */
+/* Con dibujo o foto, el degradado estorba: la imagen lo tapa entero y, si el
+   dibujo tiene huecos, asoma por detrás. Crema fijo también en oscuro, que es
+   donde el pelo oscuro de los dibujos se perdía contra el fondo. */
+.avatar.con-dibujo {
+    background: #FFF6E9;
+}
+
+.avatar img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+}
+
 .avatar:hover {
     box-shadow:
         0 0 0 2px var(--paper),
@@ -1373,6 +1391,101 @@ body.dark-mode .icon-moon {
     box-shadow:
         0 0 0 2px var(--paper),
         0 0 0 4px var(--coral);
+}
+
+
+/* ELEGIR AVATAR */
+
+.avatar-options {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+.avatar-option {
+    width: 44px;
+    height: 44px;
+
+    padding: 0;
+
+    border-radius: 50%;
+
+    background: #FFF6E9;
+
+    /* El borde va siempre, transparente cuando no está elegido: si apareciera
+       solo al elegirlo, el botón crecería 4px y la fila daría un salto. */
+    border: 2px solid transparent;
+
+    overflow: hidden;
+}
+
+.avatar-option.de-letra {
+    background:
+        linear-gradient(
+            135deg,
+            var(--coral),
+            var(--plum)
+        );
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #FFFFFF;
+
+    font-family: Arial, sans-serif;
+    font-size: 0.9375rem;
+}
+
+.avatar-option img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.avatar-option:hover {
+    border-color: color-mix(in srgb, var(--coral) 55%, transparent);
+}
+
+.avatar-option.selected {
+    border-color: var(--coral);
+
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--coral) 28%, transparent);
+}
+
+.avatar-acciones {
+    display: flex;
+
+    gap: 7px;
+
+    margin-top: 10px;
+}
+
+.avatar-acciones button {
+    height: 34px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    padding: 0 12px;
+
+    background: var(--background);
+
+    color: var(--text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.75rem;
+}
+
+.avatar-acciones button:hover {
+    background: color-mix(in srgb, var(--coral) 14%, var(--background));
 }
 
 

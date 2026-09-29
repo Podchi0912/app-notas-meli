@@ -563,6 +563,18 @@
         </div>
 
         <div class="custom-section">
+            <h4>Tu avatar</h4>
+            <!-- Los botones los genera renderAvatarOptions() -->
+            <div class="avatar-options" id="avatarOptions" role="radiogroup" aria-label="Tu avatar"></div>
+            <div class="avatar-acciones">
+                <button type="button" id="avatarSubir">Subir una foto</button>
+                <button type="button" id="avatarQuitarFoto" hidden>Quitar</button>
+            </div>
+            <input id="avatarFile" type="file" accept="image/*" hidden>
+            <p class="custom-hint" id="avatarPista">Elige un dibujo o sube una foto de tu galería.</p>
+        </div>
+
+        <div class="custom-section">
             <h4>Tu nombre</h4>
             <input class="app-name-input" id="userName" type="text" maxlength="24"
                    placeholder="Melissa" aria-label="Tu nombre">

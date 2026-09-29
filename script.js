@@ -1985,13 +1985,256 @@ function applyAppTheme() {
 
     const name = getUserName();
     document.querySelector("#greetingName").textContent = name;
-    document.querySelector("#avatarInitial").textContent = name.charAt(0).toUpperCase();
+    renderAvatar();
+    renderAvatarOptions();
 
     document.querySelectorAll("[data-palette]").forEach((button) =>
         button.classList.toggle("selected-palette", button.dataset.palette === getPalette()));
     document.querySelectorAll("[data-shape]").forEach((button) =>
         button.classList.toggle("selected", button.dataset.shape === getShape()));
 }
+
+/* =====================================================
+   AVATAR
+
+   Caras pensadas para un círculo de 34px: pocas formas, muy contrastadas y
+   ocupando casi todo el lienzo. Los dibujos de las notas son siluetas sobre
+   papel y pueden permitirse detalle; estos tienen que leerse a un tercio de
+   ese tamaño. El capibara se reaprovecha tal cual, que ya es una cabeza.
+
+   Van sobre fondo crema fijo, también en modo oscuro: con el fondo del tema,
+   el pelo oscuro del chico desaparecía y quedaba una cara flotando.
+===================================================== */
+
+const AVATAR_SVG = {
+    capibara: DECORATION_SVG.capybara,
+
+    fresa: `<svg viewBox="0 0 32 32">
+        <rect x="15.1" y="2.6" width="1.8" height="6" rx="0.9" fill="#4E8A4B"/>
+        <g fill="#5FA05B">
+            <ellipse cx="16" cy="8.4" rx="4.8" ry="2.4"/>
+            <ellipse cx="9.4" cy="10.1" rx="4.4" ry="2.2" transform="rotate(-20 9.4 10.1)"/>
+            <ellipse cx="22.6" cy="10.1" rx="4.4" ry="2.2" transform="rotate(20 22.6 10.1)"/>
+        </g>
+        <path d="M16 9.8c6.2 0 10.4 3.2 10.4 7.7 0 6-6 11.4-9.5 13.7a1.7 1.7 0 0 1-1.8 0C11.6 28.9 5.6 23.5 5.6 17.5c0-4.5 4.2-7.7 10.4-7.7z" fill="#E4564F"/>
+        <g fill="#FBD46A">
+            <ellipse cx="8.6" cy="16.2" rx="0.72" ry="1"/>
+            <ellipse cx="23.4" cy="16.2" rx="0.72" ry="1"/>
+            <ellipse cx="10.2" cy="24.4" rx="0.72" ry="1"/>
+            <ellipse cx="21.8" cy="24.4" rx="0.72" ry="1"/>
+            <ellipse cx="16" cy="27.8" rx="0.72" ry="1"/>
+            <ellipse cx="16" cy="13.6" rx="0.72" ry="1"/>
+        </g>
+        <ellipse cx="9.9" cy="20.6" rx="2" ry="1.35" fill="#F7A6AE" opacity="0.75"/>
+        <ellipse cx="22.1" cy="20.6" rx="2" ry="1.35" fill="#F7A6AE" opacity="0.75"/>
+        <ellipse cx="12.7" cy="19" rx="1.5" ry="1.9" fill="#4A1F1C"/>
+        <ellipse cx="19.3" cy="19" rx="1.5" ry="1.9" fill="#4A1F1C"/>
+        <circle cx="13.25" cy="18.2" r="0.58" fill="#FFFFFF"/>
+        <circle cx="19.85" cy="18.2" r="0.58" fill="#FFFFFF"/>
+        <path d="M13.5 22.6q2.5 2.3 5 0" stroke="#4A1F1C" stroke-width="0.95" fill="none" stroke-linecap="round"/>
+    </svg>`,
+
+    brocoli: `<svg viewBox="0 0 32 32">
+        <path d="M12.9 20h6.2v7.3c0 1.8-1.4 3.1-3.1 3.1s-3.1-1.3-3.1-3.1z" fill="#CFE3A0"/>
+        <g fill="#4E8F4A">
+            <circle cx="11.2" cy="6.6" r="4.4"/>
+            <circle cx="20.8" cy="6.6" r="4.4"/>
+            <circle cx="16" cy="5.2" r="4.2"/>
+            <circle cx="7.2" cy="11" r="4.3"/>
+            <circle cx="24.8" cy="11" r="4.3"/>
+            <circle cx="16" cy="15" r="10.4"/>
+        </g>
+        <g fill="#63AF59">
+            <circle cx="11.4" cy="8.4" r="2.3"/>
+            <circle cx="20.8" cy="8.2" r="2.1"/>
+            <circle cx="16" cy="6.2" r="1.9"/>
+            <circle cx="7.6" cy="12" r="1.8"/>
+            <circle cx="24.6" cy="11.8" r="1.8"/>
+        </g>
+        <ellipse cx="8.9" cy="19" rx="1.9" ry="1.3" fill="#F2909E" opacity="0.6"/>
+        <ellipse cx="23.1" cy="19" rx="1.9" ry="1.3" fill="#F2909E" opacity="0.6"/>
+        <ellipse cx="12.5" cy="16.4" rx="1.5" ry="1.9" fill="#1F3A1E"/>
+        <ellipse cx="19.5" cy="16.4" rx="1.5" ry="1.9" fill="#1F3A1E"/>
+        <circle cx="13.05" cy="15.6" r="0.58" fill="#FFFFFF"/>
+        <circle cx="20.05" cy="15.6" r="0.58" fill="#FFFFFF"/>
+        <path d="M13.3 20.1q2.7 2.3 5.4 0" stroke="#1F3A1E" stroke-width="0.95" fill="none" stroke-linecap="round"/>
+    </svg>`,
+
+    chica: `<svg viewBox="0 0 32 32">
+        <ellipse cx="16" cy="17" rx="11.2" ry="11.6" fill="#6B4430"/>
+        <ellipse cx="6.7" cy="22.6" rx="2.9" ry="6.4" fill="#6B4430"/>
+        <ellipse cx="25.3" cy="22.6" rx="2.9" ry="6.4" fill="#6B4430"/>
+        <circle cx="8.3" cy="18.6" r="1.9" fill="#E3A87A"/>
+        <circle cx="23.7" cy="18.6" r="1.9" fill="#E3A87A"/>
+        <ellipse cx="16" cy="18.4" rx="7.8" ry="8.6" fill="#F0C29C"/>
+        <path d="M8.3 14.6C9.2 9.5 12.3 6.7 16 6.7s6.8 2.8 7.7 7.9c-2.1-2.7-4.6-4-7.7-4s-5.6 1.3-7.7 4z" fill="#6B4430"/>
+        <ellipse cx="12.7" cy="18.6" rx="1.45" ry="1.85" fill="#3B2A22"/>
+        <ellipse cx="19.3" cy="18.6" rx="1.45" ry="1.85" fill="#3B2A22"/>
+        <circle cx="13.25" cy="17.8" r="0.55" fill="#FFFFFF"/>
+        <circle cx="19.85" cy="17.8" r="0.55" fill="#FFFFFF"/>
+        <ellipse cx="10.3" cy="21.6" rx="1.8" ry="1.2" fill="#F2909E" opacity="0.7"/>
+        <ellipse cx="21.7" cy="21.6" rx="1.8" ry="1.2" fill="#F2909E" opacity="0.7"/>
+        <path d="M13.9 22.6q2.1 1.9 4.2 0" stroke="#3B2A22" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+        <g transform="translate(2.6 5.4)">
+            <g fill="#F2909E">
+                <circle cx="21.9" cy="4.1" r="1.5"/>
+                <circle cx="24.09" cy="5.69" r="1.5"/>
+                <circle cx="23.25" cy="8.26" r="1.5"/>
+                <circle cx="20.55" cy="8.26" r="1.5"/>
+                <circle cx="19.71" cy="5.69" r="1.5"/>
+            </g>
+            <circle cx="21.9" cy="6.4" r="1.25" fill="#F7C948"/>
+        </g>
+    </svg>`,
+
+    chico: `<svg viewBox="0 0 32 32">
+        <ellipse cx="16" cy="15.2" rx="10.5" ry="9.8" fill="#3F2C22"/>
+        <circle cx="7.8" cy="18.7" r="2" fill="#E3A87A"/>
+        <circle cx="24.2" cy="18.7" r="2" fill="#E3A87A"/>
+        <ellipse cx="16" cy="18.7" rx="8.2" ry="8.9" fill="#F0C29C"/>
+        <path d="M7.9 14.6C8.6 8.9 11.8 5.9 16 5.9s7.4 3 8.1 8.3c-1.7-2.3-3.5-3.4-5.1-3.1-1.4.3-1.8 1.4-3 1.4s-1.6-1.1-3-1.4c-1.6-.3-3.4.8-5.1 3.1z" fill="#3F2C22"/>
+        <ellipse cx="12.6" cy="18.9" rx="1.45" ry="1.85" fill="#33241C"/>
+        <ellipse cx="19.4" cy="18.9" rx="1.45" ry="1.85" fill="#33241C"/>
+        <circle cx="13.15" cy="18.1" r="0.55" fill="#FFFFFF"/>
+        <circle cx="19.95" cy="18.1" r="0.55" fill="#FFFFFF"/>
+        <ellipse cx="10.1" cy="21.9" rx="1.8" ry="1.2" fill="#F2909E" opacity="0.6"/>
+        <ellipse cx="21.9" cy="21.9" rx="1.8" ry="1.2" fill="#F2909E" opacity="0.6"/>
+        <path d="M13.8 22.9q2.2 1.9 4.4 0" stroke="#33241C" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+    </svg>`
+};
+
+const AVATAR_NOMBRES = {
+    letra: "Mi inicial",
+    capibara: "Capibara",
+    fresa: "Fresa",
+    brocoli: "Brócoli",
+    chica: "Chica",
+    chico: "Chico",
+    foto: "Mi foto"
+};
+
+const AVATAR_ORDEN = ["letra", "capibara", "fresa", "brocoli", "chica", "chico"];
+
+// Lado de la foto guardada. Una del móvil trae varios megas y esto vive dentro
+// de los ajustes, que viajan enteros a la nube cada vez que cambia algo: a
+// 160px son unos 12 KB y se ve de sobra en un círculo de 34.
+const AVATAR_FOTO_LADO = 160;
+
+function avatarSrc(id) {
+    // El xmlns solo hace falta cuando el svg va como imagen suelta
+    const markup = AVATAR_SVG[id].replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ');
+    return "data:image/svg+xml," + encodeURIComponent(markup);
+}
+
+function getAvatar() {
+    const elegido = settings.avatar;
+    if (elegido === "foto") return settings.avatarFoto ? "foto" : "letra";
+    return AVATAR_SVG[elegido] ? elegido : "letra";
+}
+
+function renderAvatar() {
+    const boton = document.querySelector("#avatarInitial");
+    const elegido = getAvatar();
+    const dibujo = elegido !== "letra";
+
+    boton.classList.toggle("con-dibujo", dibujo);
+
+    if (!dibujo) {
+        boton.textContent = getUserName().charAt(0).toUpperCase();
+        boton.title = "Mi perfil";
+        return;
+    }
+
+    const img = document.createElement("img");
+    img.alt = "";
+    img.src = elegido === "foto" ? settings.avatarFoto : avatarSrc(elegido);
+    boton.replaceChildren(img);
+    boton.title = "Mi perfil";
+}
+
+function renderAvatarOptions() {
+    const caja = document.querySelector("#avatarOptions");
+    if (!caja) return;
+
+    const elegido = getAvatar();
+    const lista = settings.avatarFoto ? AVATAR_ORDEN.concat("foto") : AVATAR_ORDEN;
+
+    caja.innerHTML = lista.map((id) => {
+        const dentro = id === "letra"
+            ? `<span>${escapeHtml(getUserName().charAt(0).toUpperCase())}</span>`
+            : `<img src="${id === "foto" ? settings.avatarFoto : avatarSrc(id)}" alt="">`;
+        return `<button type="button" class="avatar-option${id === elegido ? " selected" : ""}${id === "letra" ? " de-letra" : ""}"
+                        data-avatar="${id}" role="radio" aria-checked="${id === elegido}"
+                        title="${AVATAR_NOMBRES[id]}" aria-label="${AVATAR_NOMBRES[id]}">${dentro}</button>`;
+    }).join("");
+
+    document.querySelector("#avatarQuitarFoto").hidden = !settings.avatarFoto;
+    document.querySelector("#avatarSubir").textContent = settings.avatarFoto ? "Cambiar la foto" : "Subir una foto";
+}
+
+function setAvatar(id) {
+    settings.avatar = id;
+    persistSettings();
+    renderAvatar();
+    renderAvatarOptions();
+}
+
+function avisoAvatar(texto) {
+    const pista = document.querySelector("#avatarPista");
+    pista.textContent = texto;
+    pista.classList.add("cuenta-mal");
+}
+
+// Recorta al cuadrado central y reduce antes de guardar
+function guardarFotoAvatar(archivo) {
+    if (!archivo) return;
+    if (!/^image\//.test(archivo.type)) {
+        avisoAvatar("Eso no parece una imagen.");
+        return;
+    }
+
+    const lector = new FileReader();
+
+    lector.onerror = () => avisoAvatar("No pude leer el archivo.");
+    lector.onload = () => {
+        const img = new Image();
+        // Los iPhone guardan en HEIC y el navegador no sabe abrirlo. Al subir
+        // desde la galería suele convertirlo solo, pero si llega crudo hay que
+        // decirlo en vez de dejar el botón colgado.
+        img.onerror = () => avisoAvatar("Ese formato no lo puede abrir el navegador. Prueba con una foto JPG o PNG.");
+        img.onload = () => {
+            const lienzo = document.createElement("canvas");
+            lienzo.width = AVATAR_FOTO_LADO;
+            lienzo.height = AVATAR_FOTO_LADO;
+            const lado = Math.min(img.width, img.height);
+            lienzo.getContext("2d").drawImage(
+                img,
+                (img.width - lado) / 2, (img.height - lado) / 2, lado, lado,
+                0, 0, AVATAR_FOTO_LADO, AVATAR_FOTO_LADO
+            );
+            settings.avatarFoto = lienzo.toDataURL("image/jpeg", 0.82);
+            settings.avatar = "foto";
+            persistSettings();
+            renderAvatar();
+            renderAvatarOptions();
+            const pista = document.querySelector("#avatarPista");
+            pista.textContent = "Listo. La foto se guarda recortada y pequeña, y viaja contigo a los demás aparatos.";
+            pista.classList.remove("cuenta-mal");
+        };
+        img.src = lector.result;
+    };
+
+    lector.readAsDataURL(archivo);
+}
+
+function quitarFotoAvatar() {
+    delete settings.avatarFoto;
+    if (settings.avatar === "foto") settings.avatar = "letra";
+    persistSettings();
+    renderAvatar();
+    renderAvatarOptions();
+}
+
 
 function renderShapes() {
     document.querySelector("#shapeOptions").innerHTML = PANEL_SHAPES.map((s) =>
@@ -2599,6 +2842,18 @@ document.querySelector("#decreaseFont").addEventListener("click", () => {
 document.querySelector("#openCustomizeMenu").addEventListener("click", openCustomizePanel);
 document.querySelector("#openCustomize").addEventListener("click", openAppPanel);
 document.querySelector("#avatarInitial").addEventListener("click", toggleProfilePanel);
+
+document.querySelector("#avatarOptions").addEventListener("click", (event) => {
+    const boton = event.target.closest("[data-avatar]");
+    if (boton) setAvatar(boton.dataset.avatar);
+});
+document.querySelector("#avatarSubir").addEventListener("click", () => document.querySelector("#avatarFile").click());
+document.querySelector("#avatarFile").addEventListener("change", (event) => {
+    guardarFotoAvatar(event.target.files[0]);
+    // Se vacía para que elegir dos veces la misma foto vuelva a disparar el evento
+    event.target.value = "";
+});
+document.querySelector("#avatarQuitarFoto").addEventListener("click", quitarFotoAvatar);
 document.querySelector("#closeProfilePanel").addEventListener("click", () => setProfilePanel(false));
 document.querySelector(".customize-sidebar").addEventListener("click", openAppPanel);
 document.querySelector("#closeAppPanel").addEventListener("click", () => setAppPanel(false));
