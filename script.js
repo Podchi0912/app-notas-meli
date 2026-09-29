@@ -2185,8 +2185,7 @@ function avisoAvatar(texto) {
     pista.classList.add("cuenta-mal");
 }
 
-// Recorta al cuadrado central y reduce antes de guardar
-function guardarFotoAvatar(archivo) {
+function pedirFotoAvatar(archivo) {
     if (!archivo) return;
     if (!/^image\//.test(archivo.type)) {
         avisoAvatar("Eso no parece una imagen.");
@@ -2202,29 +2201,116 @@ function guardarFotoAvatar(archivo) {
         // desde la galería suele convertirlo solo, pero si llega crudo hay que
         // decirlo en vez de dejar el botón colgado.
         img.onerror = () => avisoAvatar("Ese formato no lo puede abrir el navegador. Prueba con una foto JPG o PNG.");
-        img.onload = () => {
-            const lienzo = document.createElement("canvas");
-            lienzo.width = AVATAR_FOTO_LADO;
-            lienzo.height = AVATAR_FOTO_LADO;
-            const lado = Math.min(img.width, img.height);
-            lienzo.getContext("2d").drawImage(
-                img,
-                (img.width - lado) / 2, (img.height - lado) / 2, lado, lado,
-                0, 0, AVATAR_FOTO_LADO, AVATAR_FOTO_LADO
-            );
-            settings.avatarFoto = lienzo.toDataURL("image/jpeg", 0.82);
-            settings.avatar = "foto";
-            persistSettings();
-            renderAvatar();
-            renderAvatarOptions();
-            const pista = document.querySelector("#avatarPista");
-            pista.textContent = "Listo. La foto se guarda recortada y pequeña, y viaja contigo a los demás aparatos.";
-            pista.classList.remove("cuenta-mal");
-        };
+        img.onload = () => abrirRecorte(img);
         img.src = lector.result;
     };
 
     lector.readAsDataURL(archivo);
+}
+
+
+/* ---------------------------------------------- colocar la foto a mano
+
+   Antes la página recortaba el cuadrado del centro por su cuenta, y en una
+   foto vertical eso deja fuera media cara. Ahora se ve dentro del mismo
+   círculo en el que va a quedar, se arrastra y se acerca, y solo entonces se
+   recorta: lo que se ve es exactamente lo que se guarda.                  */
+
+// { img, lado (el del marco), base (la escala que hace que cubra), zoom, x, y }
+let recorte = null;
+let arrastreRecorte = null;
+
+function escalaRecorte() {
+    return recorte.base * recorte.zoom;
+}
+
+// La foto no puede despegarse de ningún borde: si se pudiera, quedaría un
+// trozo de marco vacío y el recorte saldría con una banda de fondo.
+function limitarRecorte() {
+    const escala = escalaRecorte();
+    const ancho = recorte.img.naturalWidth * escala;
+    const alto = recorte.img.naturalHeight * escala;
+    recorte.x = Math.min(0, Math.max(recorte.lado - ancho, recorte.x));
+    recorte.y = Math.min(0, Math.max(recorte.lado - alto, recorte.y));
+}
+
+function pintarRecorte() {
+    limitarRecorte();
+    const escala = escalaRecorte();
+    const lienzo = document.querySelector("#recorteImg");
+    lienzo.style.width = (recorte.img.naturalWidth * escala) + "px";
+    lienzo.style.height = (recorte.img.naturalHeight * escala) + "px";
+    lienzo.style.left = recorte.x + "px";
+    lienzo.style.top = recorte.y + "px";
+}
+
+function abrirRecorte(img) {
+    const panel = document.querySelector("#recorteFoto");
+    // Hay que enseñarlo antes de medir el marco: mientras está oculto no tiene
+    // tamaño y todas las cuentas saldrían a cero.
+    panel.hidden = false;
+
+    const lado = document.querySelector("#recorteVista").getBoundingClientRect().width;
+    const base = lado / Math.min(img.naturalWidth, img.naturalHeight);
+
+    recorte = { img, lado, base, zoom: 1, x: 0, y: 0 };
+    recorte.x = (lado - img.naturalWidth * base) / 2;
+    recorte.y = (lado - img.naturalHeight * base) / 2;
+
+    document.querySelector("#recorteImg").src = img.src;
+    document.querySelector("#recorteZoom").value = "1";
+    pintarRecorte();
+}
+
+function cerrarRecorte() {
+    document.querySelector("#recorteFoto").hidden = true;
+    const lienzo = document.querySelector("#recorteImg");
+    lienzo.removeAttribute("src");
+    // Y el tamaño y la posición de la foto anterior, que si no se quedan
+    // puestos y la siguiente asoma un instante con las medidas de la otra.
+    lienzo.removeAttribute("style");
+    recorte = null;
+    arrastreRecorte = null;
+}
+
+// Al acercar, el punto del centro se queda donde está. Si no, la foto parece
+// escaparse hacia una esquina cada vez que se mueve la barra.
+function acercarRecorte(zoom) {
+    if (!recorte) return;
+    const antes = escalaRecorte();
+    recorte.zoom = zoom;
+    const ahora = escalaRecorte();
+    const centro = recorte.lado / 2;
+    recorte.x = centro - (centro - recorte.x) * (ahora / antes);
+    recorte.y = centro - (centro - recorte.y) * (ahora / antes);
+    pintarRecorte();
+}
+
+function guardarRecorte() {
+    if (!recorte) return;
+    const escala = escalaRecorte();
+    const lienzo = document.createElement("canvas");
+    lienzo.width = AVATAR_FOTO_LADO;
+    lienzo.height = AVATAR_FOTO_LADO;
+
+    // El trozo de la foto original que se ve por el marco, en píxeles suyos
+    lienzo.getContext("2d").drawImage(
+        recorte.img,
+        -recorte.x / escala, -recorte.y / escala,
+        recorte.lado / escala, recorte.lado / escala,
+        0, 0, AVATAR_FOTO_LADO, AVATAR_FOTO_LADO
+    );
+
+    settings.avatarFoto = lienzo.toDataURL("image/jpeg", 0.82);
+    settings.avatar = "foto";
+    persistSettings();
+    renderAvatar();
+    renderAvatarOptions();
+    cerrarRecorte();
+
+    const pista = document.querySelector("#avatarPista");
+    pista.textContent = "Listo. La foto se guarda pequeña y viaja contigo a los demás aparatos.";
+    pista.classList.remove("cuenta-mal");
 }
 
 function quitarFotoAvatar() {
@@ -2849,11 +2935,53 @@ document.querySelector("#avatarOptions").addEventListener("click", (event) => {
 });
 document.querySelector("#avatarSubir").addEventListener("click", () => document.querySelector("#avatarFile").click());
 document.querySelector("#avatarFile").addEventListener("change", (event) => {
-    guardarFotoAvatar(event.target.files[0]);
+    pedirFotoAvatar(event.target.files[0]);
     // Se vacía para que elegir dos veces la misma foto vuelva a disparar el evento
     event.target.value = "";
 });
 document.querySelector("#avatarQuitarFoto").addEventListener("click", quitarFotoAvatar);
+
+const marcoRecorte = document.querySelector("#recorteVista");
+
+marcoRecorte.addEventListener("pointerdown", (event) => {
+    if (!recorte) return;
+    arrastreRecorte = { puntero: event.pointerId, x: event.clientX, y: event.clientY };
+    marcoRecorte.setPointerCapture(event.pointerId);
+    event.preventDefault();
+});
+
+marcoRecorte.addEventListener("pointermove", (event) => {
+    if (!arrastreRecorte || event.pointerId !== arrastreRecorte.puntero) return;
+    recorte.x += event.clientX - arrastreRecorte.x;
+    recorte.y += event.clientY - arrastreRecorte.y;
+    arrastreRecorte.x = event.clientX;
+    arrastreRecorte.y = event.clientY;
+    pintarRecorte();
+});
+
+["pointerup", "pointercancel"].forEach((tipo) => marcoRecorte.addEventListener(tipo, (event) => {
+    if (arrastreRecorte && event.pointerId === arrastreRecorte.puntero) arrastreRecorte = null;
+}));
+
+// La rueda acerca, que es lo que espera cualquiera con un ratón. passive en
+// false porque hay que impedir que la página se desplace por debajo.
+marcoRecorte.addEventListener("wheel", (event) => {
+    if (!recorte) return;
+    event.preventDefault();
+    const barra = document.querySelector("#recorteZoom");
+    const paso = event.deltaY < 0 ? 1.08 : 1 / 1.08;
+    const nuevo = Math.min(4, Math.max(1, recorte.zoom * paso));
+    barra.value = String(nuevo);
+    acercarRecorte(nuevo);
+}, { passive: false });
+
+document.querySelector("#recorteZoom").addEventListener("input", (event) => acercarRecorte(Number(event.target.value)));
+document.querySelector("#recorteGuardar").addEventListener("click", guardarRecorte);
+document.querySelector("#recorteCancelar").addEventListener("click", cerrarRecorte);
+document.querySelector("#recorteFoto").addEventListener("click", (event) => {
+    // Tocar el fondo oscuro cancela; dentro de la caja, no
+    if (event.target.id === "recorteFoto") cerrarRecorte();
+});
 document.querySelector("#closeProfilePanel").addEventListener("click", () => setProfilePanel(false));
 document.querySelector(".customize-sidebar").addEventListener("click", openAppPanel);
 document.querySelector("#closeAppPanel").addEventListener("click", () => setAppPanel(false));

@@ -3990,6 +3990,133 @@ button.calendar-day.is-selected:hover {
     font-size: 0.875rem;
 }
 
+/* COLOCAR LA FOTO DEL AVATAR */
+
+.recorte {
+    display: flex;
+
+    position: fixed;
+    inset: 0;
+
+    /* Por encima de los paneles flotantes, que están en 70 */
+    z-index: 90;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 16px;
+
+    background: rgba(31, 22, 25, 0.55);
+}
+
+.recorte-caja {
+    width: min(340px, 100%);
+
+    border: 1px solid var(--border);
+    border-radius: var(--panel-radius, 22px);
+
+    padding: 20px 20px 16px;
+
+    background: var(--paper);
+
+    box-shadow: var(--sidebar-shadow);
+
+    text-align: center;
+}
+
+.recorte-caja h3 {
+    margin-bottom: 14px;
+
+    font-family: Arial, sans-serif;
+    font-size: 0.9375rem;
+}
+
+.recorte-vista {
+    position: relative;
+
+    width: min(250px, 62vw);
+
+    aspect-ratio: 1;
+
+    margin: 0 auto;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    background: #EFE3D5;
+
+    cursor: grab;
+
+    /* Sin esto, en el móvil el dedo arrastra la página y no la foto */
+    touch-action: none;
+}
+
+.recorte-vista:active {
+    cursor: grabbing;
+}
+
+.recorte-vista img {
+    display: block;
+
+    position: absolute;
+
+    /* La foto tiene que poder ser más ancha que el marco: de eso va esto */
+    max-width: none;
+
+    user-select: none;
+
+    -webkit-user-drag: none;
+}
+
+.recorte-zoom {
+    width: 100%;
+
+    margin-top: 16px;
+
+    accent-color: var(--coral);
+}
+
+.recorte-acciones {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    margin-top: 14px;
+}
+
+.recorte-acciones button {
+    height: 36px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    padding: 0 16px;
+
+    background: var(--background);
+
+    color: var(--text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.8125rem;
+}
+
+#recorteGuardar {
+    border-color: transparent;
+
+    background: var(--cta, var(--coral));
+
+    color: var(--cta-text, var(--white));
+}
+
+#recorteGuardar:hover {
+    background: var(--cta-hover, var(--coral));
+}
+
+
 /* PANTALLA DE ENTRADA */
 
 .pantalla-entrada {
@@ -4028,6 +4155,8 @@ html.sin-entrar .pantalla-entrada {
     border-radius: var(--panel-radius, 22px);
 
     padding: 26px 22px 22px;
+    /* El escritorio manda a partir de aquí; estos valores son los del móvil,
+       donde la caja tiene que caber en una pantalla estrecha y bajita. */
 
     background: var(--paper);
 
@@ -4076,6 +4205,64 @@ html.sin-entrar .pantalla-entrada {
     margin-top: 14px;
 
     text-align: center;
+}
+
+/* En una pantalla de ordenador la caja del móvil se ve diminuta y perdida en
+   medio de todo el hueco. Aquí sí hay sitio, así que crece. */
+@media (min-width: 951px) {
+
+    .entrada-caja {
+        width: min(440px, 100%);
+
+        padding: 36px 34px 30px;
+    }
+
+    .entrada-logo {
+        width: 168px;
+        height: 168px;
+
+        margin-bottom: 10px;
+    }
+
+    .entrada-caja h1 {
+        font-size: 1.875rem;
+    }
+
+    .entrada-sub {
+        margin: 6px 0 22px;
+
+        font-size: 0.9375rem;
+    }
+
+    .entrada-caja .cuenta-form {
+        gap: 11px;
+    }
+
+    .entrada-caja .cuenta-form input {
+        height: 46px;
+
+        padding: 0 14px;
+
+        font-size: 0.9375rem;
+    }
+
+    .entrada-caja #cuentaEntrar {
+        height: 46px;
+
+        padding: 0 24px;
+
+        font-size: 0.875rem;
+    }
+
+    .entrada-caja #cuentaEnlace {
+        font-size: 0.8125rem;
+    }
+
+    .entrada-caja .custom-hint {
+        margin-top: 18px;
+
+        font-size: 0.8125rem;
+    }
 }
 
 

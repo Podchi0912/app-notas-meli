@@ -810,6 +810,34 @@
     <button type="button" class="fastener-reset" id="fastenerReset" hidden>↺ Devolver a su sitio</button>
 </div>
 
+<!-- COLOCAR LA FOTO DEL AVATAR. Se abre al elegir una imagen: antes la página
+     recortaba el centro por su cuenta y salían fotos descabezadas. -->
+<div class="recorte" id="recorteFoto" role="dialog" aria-modal="true" aria-labelledby="recorteTitulo" hidden>
+
+    <div class="recorte-caja">
+
+        <h3 id="recorteTitulo">Coloca tu foto</h3>
+
+        <!-- Redondo porque redondo es como se va a ver: un marco cuadrado
+             engañaría sobre lo que entra y lo que se pierde. -->
+        <div class="recorte-vista" id="recorteVista">
+            <img id="recorteImg" alt="">
+        </div>
+
+        <input class="recorte-zoom" id="recorteZoom" type="range"
+               min="1" max="4" step="0.01" value="1" aria-label="Acercar la foto">
+
+        <p class="custom-hint">Arrastra la foto para colocarla y usa la barra para acercarla.</p>
+
+        <div class="recorte-acciones">
+            <button type="button" id="recorteCancelar">Cancelar</button>
+            <button type="button" id="recorteGuardar">Guardar</button>
+        </div>
+
+    </div>
+
+</div>
+
 <dialog id="newNoteDialog">
     <form method="dialog" class="new-note-form">
         <h3 id="newNoteHeading">Nueva nota</h3>
