@@ -361,6 +361,16 @@ input:focus-visible,
     background: var(--cta-hover, #E9B3A5);
 }
 
+/* En el escritorio sobra: justo al lado están las cinco tarjetas de "¿Qué
+   quieres crear hoy?", que hacen lo mismo y además dejan elegir el tipo. En
+   móvil esas tarjetas no caben en pantalla y el botón sí hace falta, así que
+   allí se queda (lo recoloca el @media de abajo). */
+@media (min-width: 951px) {
+    .new-button {
+        display: none;
+    }
+}
+
 
 /* NAV */
 
