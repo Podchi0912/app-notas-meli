@@ -60,6 +60,10 @@
     const botonSalir = document.querySelector("#cuentaSalir");
     const botonAhora = document.querySelector("#cuentaSincronizar");
     const pista = document.querySelector("#cuentaPista");
+    const titulo = document.querySelector("#entradaTitulo");
+    const subtitulo = document.querySelector("#entradaSub");
+    const pregunta = document.querySelector("#entradaPregunta");
+    const botonModo = document.querySelector("#cambiarModo");
     const detalle = document.querySelector("#cuentaDetalle");
 
     let sesion = leerJson(SESION_KEY, null);
@@ -69,6 +73,11 @@
     let temporizador = null;
     let aviso = "";
     let avisoMalo = false;
+    let creandoCuenta = false;
+
+    // El mínimo que pide Supabase por defecto. Se comprueba aquí para no
+    // gastar un viaje al servidor y para poder decirlo en español.
+    const CLAVE_MINIMA = 6;
 
 
     /* ============================= utilidades ============================= */
@@ -183,6 +192,45 @@
         });
     }
 
+    // Crea la cuenta. Si el proyecto tiene la confirmación por correo apagada,
+    // Supabase devuelve ya la sesión y se entra del tirón; si la tiene puesta,
+    // devuelve solo el usuario y hay que pasar por la bandeja de entrada.
+    async function crearCuenta(correo, secreto) {
+        const destino = location.origin + location.pathname;
+        const respuesta = await fetch(API + "/auth/v1/signup?redirect_to=" + encodeURIComponent(destino), {
+            method: "POST",
+            headers: { apikey: CLAVE, "Content-Type": "application/json" },
+            body: JSON.stringify({ email: correo, password: secreto })
+        });
+
+        if (!respuesta.ok) {
+            const detalle = await textoDelError(respuesta);
+            if (/already registered|already exists/i.test(detalle)) {
+                throw new Error("Ya hay un cuaderno con ese correo. Entra en vez de crearlo.");
+            }
+            if (/signups? not allowed|signup is disabled/i.test(detalle)) {
+                throw new Error("Ahora mismo no se pueden crear cuadernos nuevos.");
+            }
+            if (/password/i.test(detalle)) {
+                throw new Error("Esa contraseña no vale: tiene que tener al menos " + CLAVE_MINIMA + " caracteres.");
+            }
+            if (/rate limit|too many/i.test(detalle)) {
+                throw new Error("Demasiados intentos seguidos. Espera un minuto.");
+            }
+            throw new Error(detalle);
+        }
+
+        const datos = await respuesta.json();
+        if (!datos.access_token) return false;      // hay que confirmar por correo
+
+        guardarSesion({
+            acceso: datos.access_token,
+            refresco: datos.refresh_token || "",
+            expira: Date.now() + (Number(datos.expires_in) || 3600) * 1000
+        });
+        return true;
+    }
+
     // Manda el correo con el enlace de entrada (por si olvida la contraseña)
     async function pedirEnlace(correo) {
         const destino = location.origin + location.pathname;
@@ -268,7 +316,12 @@
     async function salir() {
         const guardada = sesion;
         olvidarSesion();
-        meta = metaVacia();
+        // La memoria de sincronización se queda, y con ella de quién era este
+        // cuaderno. Hace dos cosas: si vuelve la misma persona, sigue por donde
+        // iba en vez de bajárselo todo otra vez; y si entra otra, se sabe que
+        // el cuaderno que hay aquí no es suyo y hay que vaciarlo antes de
+        // abrirle la puerta. Borrándola, lo segundo era imposible de detectar
+        // y las notas de la primera acababan subidas a la cuenta de la segunda.
         guardarMeta();
         pintar();
         if (!guardada) return;
@@ -564,6 +617,32 @@
         return "hace " + Math.round(horas / 24) + " días";
     }
 
+    // Entrar y crear cuenta piden lo mismo, así que es el mismo formulario con
+    // otras palabras. Cambia también el autocomplete: en un alta el navegador
+    // debe ofrecer una contraseña nueva, no rellenar la guardada.
+    function ponerModo(registro) {
+        creandoCuenta = registro;
+        aviso = "";
+        avisoMalo = false;
+
+        titulo.textContent = registro ? "Crea tu cuaderno" : "Mi Cuadernito";
+        subtitulo.textContent = registro
+            ? "Tus notas serán solo tuyas."
+            : "Entra para ver tus notas.";
+        botonEntrar.textContent = registro ? "Crear cuaderno" : "Entrar";
+        botonEntrar.dataset.textoOriginal = botonEntrar.textContent;
+        campoClave.autocomplete = registro ? "new-password" : "current-password";
+        campoClave.placeholder = registro
+            ? "Contraseña (mínimo " + CLAVE_MINIMA + ")"
+            : "Contraseña";
+        // El enlace al correo solo sirve para volver a entrar en algo que ya existe
+        if (botonEnlace) botonEnlace.hidden = registro;
+        pregunta.textContent = registro ? "¿Ya tienes cuaderno?" : "¿Todavía no tienes cuaderno?";
+        botonModo.textContent = registro ? "Entrar" : "Crear uno";
+
+        pintar();
+    }
+
     function pintar() {
         // Sin nube configurada no hay puerta que valga: el cuaderno funciona
         // igual guardando solo aquí, y dejarlo cerrado sería dejarlo inservible.
@@ -587,8 +666,9 @@
             cajaEstado.textContent = "Sin entrar";
             cajaEstado.className = "cuenta-estado";
             if (pista) {
-                pista.textContent = aviso
-                    || "Entra con tu correo y tu contraseña. Solo hace falta una vez en cada aparato: después se queda entrada.";
+                pista.textContent = aviso || (creandoCuenta
+                    ? "Se crea con tu correo y una contraseña. Nadie más verá tus notas, ni siquiera quien tenga otro cuaderno aquí."
+                    : "Entra con tu correo y tu contraseña. Solo hace falta una vez en cada aparato: después se queda entrada.");
                 pista.classList.toggle("cuenta-mal", avisoMalo);
             }
             return;
@@ -644,29 +724,52 @@
             const secreto = campoClave ? campoClave.value : "";
             if (!correo) return;
             if (!secreto) {
-                aviso = "Escribe también la contraseña, o pide un enlace al correo.";
+                aviso = creandoCuenta
+                    ? "Elige una contraseña para tu cuaderno."
+                    : "Escribe también la contraseña, o pide un enlace al correo.";
                 avisoMalo = true;
                 pintar();
                 return;
             }
-            ocupado(botonEntrar, "Entrando…");
-            try {
-                await entrarConClave(correo, secreto);
-                if (meta.usuario && meta.usuario !== sesion.usuario && app.vaciar) {
-                    app.vaciar();
-                    meta = metaVacia();
-                    guardarMeta();
-                }
-                if (campoClave) campoClave.value = "";
-                aviso = "";
-                avisoMalo = false;
+            if (creandoCuenta && secreto.length < CLAVE_MINIMA) {
+                aviso = "La contraseña necesita al menos " + CLAVE_MINIMA + " caracteres.";
+                avisoMalo = true;
                 pintar();
-                sincronizar();
+                return;
+            }
+
+            ocupado(botonEntrar, creandoCuenta ? "Creando…" : "Entrando…");
+            try {
+                const dentro = creandoCuenta
+                    ? await crearCuenta(correo, secreto)
+                    : (await entrarConClave(correo, secreto), true);
+
+                if (!dentro) {
+                    // El proyecto pide confirmar por correo
+                    aviso = "Te mandé un correo a " + correo + " para confirmar el cuaderno. Ábrelo y luego entra.";
+                    avisoMalo = false;
+                } else {
+                    // Otra persona entrando donde ya hubo otra cuenta: el cuaderno
+                    // que hay aquí es del anterior y ya está en SU nube, así que
+                    // se va antes de abrir la puerta.
+                    if (meta.usuario && meta.usuario !== sesion.usuario && app.vaciar) {
+                        app.vaciar();
+                        meta = metaVacia();
+                        guardarMeta();
+                    }
+                    if (campoClave) campoClave.value = "";
+                    aviso = "";
+                    avisoMalo = false;
+                    pintar();
+                    sincronizar();
+                }
             } catch (error) {
-                aviso = error && error.message ? error.message : "No se pudo entrar.";
+                aviso = error && error.message
+                    ? error.message
+                    : (creandoCuenta ? "No se pudo crear el cuaderno." : "No se pudo entrar.");
                 avisoMalo = true;
             }
-            libre(botonEntrar, "Entrar");
+            libre(botonEntrar, creandoCuenta ? "Crear cuaderno" : "Entrar");
             pintar();
         });
     }
@@ -694,11 +797,15 @@
         });
     }
 
+    if (botonModo) botonModo.addEventListener("click", () => ponerModo(!creandoCuenta));
+
     if (botonSalir) {
         botonSalir.addEventListener("click", () => {
             if (!confirm("¿Cerrar sesión? Volverás a la pantalla de entrada. Tus notas siguen en la nube y en este aparato.")) return;
             aviso = "";
             avisoMalo = false;
+            creandoCuenta = false;
+            ponerModo(false);
             salir();
         });
     }

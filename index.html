@@ -43,8 +43,8 @@
 
         <img class="entrada-logo" src="img/logo-400.png" alt="" width="132" height="132" decoding="async">
 
-        <h1>Mi Cuadernito</h1>
-        <p class="entrada-sub">Entra para ver tus notas.</p>
+        <h1 id="entradaTitulo">Mi Cuadernito</h1>
+        <p class="entrada-sub" id="entradaSub">Entra para ver tus notas.</p>
 
         <form class="cuenta-form" id="cuentaForm">
             <!-- autocomplete en condiciones para que el navegador ofrezca
@@ -60,6 +60,14 @@
         </form>
 
         <p class="custom-hint" id="cuentaPista">Entra con tu correo y tu contraseña. Solo hace falta una vez en cada aparato: después se queda entrada.</p>
+
+        <!-- El mismo formulario sirve para entrar y para crear cuenta: los dos
+             piden lo mismo, y dos formularios distintos solo darían ocasión de
+             escribir en el que no era. -->
+        <p class="entrada-cambio">
+            <span id="entradaPregunta">¿Todavía no tienes cuaderno?</span>
+            <button type="button" id="cambiarModo">Crear uno</button>
+        </p>
 
     </div>
 

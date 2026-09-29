@@ -4317,6 +4317,40 @@ html.sin-entrar .pantalla-entrada {
     text-align: center;
 }
 
+.entrada-cambio {
+    margin-top: 16px;
+
+    padding-top: 14px;
+
+    border-top: 1px solid var(--border);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.8125rem;
+
+    color: var(--muted);
+}
+
+.entrada-cambio button {
+    margin-left: 4px;
+
+    padding: 0;
+
+    background: none;
+
+    color: var(--plum);
+
+    font-family: inherit;
+    font-size: inherit;
+
+    text-decoration: underline;
+
+    text-underline-offset: 2px;
+}
+
+.entrada-cambio button:hover {
+    color: var(--coral);
+}
+
 /* En una pantalla de ordenador la caja del móvil se ve diminuta y perdida en
    medio de todo el hueco. Aquí sí hay sitio, así que crece. */
 @media (min-width: 951px) {
