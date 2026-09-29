@@ -1321,6 +1321,12 @@ body.dark-mode .icon-moon {
     width: 34px;
     height: 34px;
 
+    /* Es un botón: sin esto el relleno que le pone el navegador aplasta la
+       inicial dentro del círculo. */
+    padding: 0;
+
+    flex-shrink: 0;
+
     border-radius: 50%;
 
     background:
@@ -1341,6 +1347,20 @@ body.dark-mode .icon-moon {
     font-family: Arial, sans-serif;
 
     font-size: 0.8125rem;
+}
+
+/* Un anillo en vez de agrandarla: el círculo está pegado al borde de la barra
+   y al crecer se salía. El hueco lo da la primera sombra, del color del panel. */
+.avatar:hover {
+    box-shadow:
+        0 0 0 2px var(--paper),
+        0 0 0 4px color-mix(in srgb, var(--coral) 55%, transparent);
+}
+
+.avatar.is-active {
+    box-shadow:
+        0 0 0 2px var(--paper),
+        0 0 0 4px var(--coral);
 }
 
 

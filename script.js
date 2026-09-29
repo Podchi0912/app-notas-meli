@@ -1652,6 +1652,7 @@ function setCustomizePanel(open) {
 
 function openCustomizePanel() {
     setAppPanel(false);
+    setProfilePanel(false);
     startCustomization();
     setCustomizePanel(true);
 }
@@ -1665,8 +1666,31 @@ function setAppPanel(open) {
 
 function openAppPanel() {
     setCustomizePanel(false);
-    document.querySelector("#userName").value = settings.userName || "";
+    setProfilePanel(false);
     setAppPanel(true);
+}
+
+function setProfilePanel(open) {
+    document.querySelector("#profilePanel").classList.toggle("is-open", open);
+    document.querySelector("#sheetBackdrop").classList.toggle("is-open", open);
+    // La inicial se queda resaltada mientras su panel está abierto
+    const inicial = document.querySelector("#avatarInitial");
+    inicial.classList.toggle("is-active", open);
+    inicial.setAttribute("aria-expanded", String(open));
+}
+
+function openProfilePanel() {
+    setCustomizePanel(false);
+    setAppPanel(false);
+    // El campo se rellena al abrir y no al escribir: así no pelea con lo que
+    // ella esté tecleando ni con lo que llegue de la nube.
+    document.querySelector("#userName").value = settings.userName || "";
+    setProfilePanel(true);
+}
+
+function toggleProfilePanel() {
+    if (document.querySelector("#profilePanel").classList.contains("is-open")) setProfilePanel(false);
+    else openProfilePanel();
 }
 
 function createNote(type, title, categoryId) {
@@ -2574,6 +2598,8 @@ document.querySelector("#decreaseFont").addEventListener("click", () => {
 // personalizan LA APP. Antes los tres abrían el mismo panel de nota.
 document.querySelector("#openCustomizeMenu").addEventListener("click", openCustomizePanel);
 document.querySelector("#openCustomize").addEventListener("click", openAppPanel);
+document.querySelector("#avatarInitial").addEventListener("click", toggleProfilePanel);
+document.querySelector("#closeProfilePanel").addEventListener("click", () => setProfilePanel(false));
 document.querySelector(".customize-sidebar").addEventListener("click", openAppPanel);
 document.querySelector("#closeAppPanel").addEventListener("click", () => setAppPanel(false));
 
@@ -2756,6 +2782,11 @@ const PANELES_FLOTANTES = [
         dentro: "#appPanel, #openCustomize, .customize-sidebar"
     },
     {
+        abierto: () => document.querySelector("#profilePanel").classList.contains("is-open"),
+        cerrar: () => setProfilePanel(false),
+        dentro: "#profilePanel, #avatarInitial"
+    },
+    {
         // El panel de personalizar nota y el diálogo de crear viven fuera del
         // editor pero trabajan sobre él: tocarlos no puede cerrarlo. Las
         // tarjetas y los botones de crear tampoco, porque son justo lo que lo
@@ -2902,6 +2933,6 @@ window.Cuadernito = {
 
     // Vuelve del enlace del correo: que vea en qué quedó la cosa
     abrirCuenta() {
-        openAppPanel();
+        openProfilePanel();
     }
 };

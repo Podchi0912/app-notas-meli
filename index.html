@@ -230,7 +230,11 @@
 
                 </button>
 
-                <div class="avatar" id="avatarInitial">M</div>
+                <!-- La inicial no era más que un adorno; ahora es la puerta a
+                     la cuenta, que es donde se la busca en cualquier página. -->
+                <button class="avatar" id="avatarInitial" type="button"
+                        aria-haspopup="dialog" aria-expanded="false"
+                        aria-label="Mi perfil" title="Mi perfil">M</button>
 
             </div>
 
@@ -525,6 +529,46 @@
             <button id="closeAppPanel" type="button" aria-label="Cerrar">×</button>
         </div>
 
+        <div class="custom-section">
+            <h4>Paleta</h4>
+            <!-- Las genera renderPalettes() -->
+            <div class="palette-options" id="paletteOptions"></div>
+            <p class="custom-hint">Seis combinaciones comprobadas: todas mantienen el texto legible.</p>
+        </div>
+
+        <div class="custom-section">
+            <h4>Forma de los paneles</h4>
+            <!-- Las genera renderShapes() -->
+            <div class="style-options vertical" id="shapeOptions"></div>
+        </div>
+
+        <!-- Solo en móvil: colocarGraduador() trae aquí el control .font-scale
+             de la barra superior, donde competía con acciones más frecuentes. -->
+        <div class="custom-section solo-movil" id="panelFontSection">
+            <h4>Tamaño de la letra</h4>
+            <div id="panelFontSlot"></div>
+            <p class="custom-hint">Afecta a toda la página, no al tamaño de cada nota.</p>
+        </div>
+
+    </aside>
+
+    <!-- MI PERFIL. Lo abre la inicial de la barra de arriba. Aquí va lo que es
+         de la persona (su nombre y su cuenta), y en #appPanel se queda solo lo
+         que es del aspecto de la página. -->
+    <aside class="float-panel profile-panel" id="profilePanel">
+
+        <div class="customize-header">
+            <h3>Mi perfil</h3>
+            <button id="closeProfilePanel" type="button" aria-label="Cerrar">×</button>
+        </div>
+
+        <div class="custom-section">
+            <h4>Tu nombre</h4>
+            <input class="app-name-input" id="userName" type="text" maxlength="24"
+                   placeholder="Melissa" aria-label="Tu nombre">
+            <p class="custom-hint">Aparece en el saludo y en la inicial de arriba.</p>
+        </div>
+
         <!-- Cuenta y sincronización. Todo esto lo rellena y lo maneja nube.js;
              si no hay nube configurada, se queda en "solo en este aparato". -->
         <div class="custom-section">
@@ -550,35 +594,7 @@
                 <button type="button" id="cuentaSalir">Cerrar sesión</button>
             </div>
 
-            <p class="custom-hint" id="cuentaPista">Escribe tu correo y te llega un enlace para entrar. No hay contraseña que recordar.</p>
-        </div>
-
-        <div class="custom-section">
-            <h4>Paleta</h4>
-            <!-- Las genera renderPalettes() -->
-            <div class="palette-options" id="paletteOptions"></div>
-            <p class="custom-hint">Seis combinaciones comprobadas: todas mantienen el texto legible.</p>
-        </div>
-
-        <div class="custom-section">
-            <h4>Forma de los paneles</h4>
-            <!-- Las genera renderShapes() -->
-            <div class="style-options vertical" id="shapeOptions"></div>
-        </div>
-
-        <!-- Solo en móvil: colocarGraduador() trae aquí el control .font-scale
-             de la barra superior, donde competía con acciones más frecuentes. -->
-        <div class="custom-section solo-movil" id="panelFontSection">
-            <h4>Tamaño de la letra</h4>
-            <div id="panelFontSlot"></div>
-            <p class="custom-hint">Afecta a toda la página, no al tamaño de cada nota.</p>
-        </div>
-
-        <div class="custom-section">
-            <h4>Tu nombre</h4>
-            <input class="app-name-input" id="userName" type="text" maxlength="24"
-                   placeholder="Melissa" aria-label="Tu nombre">
-            <p class="custom-hint">Aparece en el saludo y en la inicial de arriba.</p>
+            <p class="custom-hint" id="cuentaPista">Entra con tu correo y tu contraseña.</p>
         </div>
 
     </aside>
