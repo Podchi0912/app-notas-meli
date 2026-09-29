@@ -263,6 +263,18 @@ input:focus-visible,
     flex-direction: column;
 
     overflow-y: auto;
+
+    /* Firefox */
+    scrollbar-width: none;
+}
+
+/* La barra de desplazamiento la pinta el sistema, en blanco y a su ancho, y
+   parte en dos el burdeos del panel. Se esconde: el sidebar se sigue
+   desplazando con la rueda, con el dedo y con el teclado, solo que sin esa
+   raya. Aparecía al crecer la letra o al haber muchas categorías, que es
+   justo cuando el panel se queda corto de alto. */
+.sidebar::-webkit-scrollbar {
+    display: none;
 }
 
 /* Con la altura del panel acotada, los hijos flex se encogían para caber
