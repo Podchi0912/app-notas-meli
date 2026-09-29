@@ -2378,6 +2378,76 @@ function colocarGraduador() {
     if (control.parentElement !== destino) destino.prepend(control);
 }
 
+/* =====================================================
+   CERRAR DESLIZANDO Y VENTANITA DE LA LETRA (solo móvil)
+===================================================== */
+
+// Cuánto hay que bajar para que se cierre en vez de volver a su sitio
+const CIERRE_DESLIZANDO = 80;
+
+/* En móvil estos paneles son hojas que suben desde abajo, con su tirador
+   arriba: deslizarlas hacia abajo para cerrarlas es el gesto que uno prueba
+   sin que nadie se lo diga.
+
+   Se agarra por la cabecera y no por todo el panel porque el cuerpo se
+   desplaza por dentro. Si el dedo pudiera arrastrar la hoja desde cualquier
+   sitio, el navegador tendría que adivinar en cada toque si se quiere
+   desplazar el contenido o mover la hoja, y esa pelea la gana siempre el
+   desplazamiento. La cabecera lleva touch-action: none y ahí no hay duda. */
+function permitirCierreDeslizando(caja, cerrar) {
+    const cabecera = caja.querySelector(".customize-header");
+    if (!cabecera) return;
+
+    let gesto = null;
+
+    function soltar(event) {
+        if (!gesto || event.pointerId !== gesto.puntero) return;
+        const bastante = gesto.dy > CIERRE_DESLIZANDO;
+        gesto = null;
+
+        caja.style.transition = "translate 0.18s ease-out, opacity 0.18s ease-out";
+        caja.style.translate = bastante ? "0 110%" : "0 0";
+        caja.style.opacity = bastante ? "0" : "1";
+
+        if (!bastante) return;
+        // Se cierra al acabar de irse, no antes, o pegaría un salto
+        setTimeout(() => {
+            cerrar();
+            caja.style.transition = "";
+            caja.style.translate = "";
+            caja.style.opacity = "";
+        }, 180);
+    }
+
+    cabecera.addEventListener("pointerdown", (event) => {
+        if (!anchoMovil.matches) return;
+        // Con ratón ya están la × y el clic fuera; arrastrar sin querer sería peor
+        if (event.pointerType === "mouse") return;
+        if (event.target.closest("button")) return;
+
+        gesto = { puntero: event.pointerId, y: event.clientY, dy: 0 };
+        cabecera.setPointerCapture(event.pointerId);
+        caja.style.transition = "none";
+    });
+
+    cabecera.addEventListener("pointermove", (event) => {
+        if (!gesto || event.pointerId !== gesto.puntero) return;
+        // Solo hacia abajo: tirar hacia arriba no debe despegar la hoja
+        gesto.dy = Math.max(0, event.clientY - gesto.y);
+        caja.style.translate = "0 " + gesto.dy + "px";
+        // Se va apagando, para que se note que el gesto va a algún sitio
+        caja.style.opacity = String(Math.max(0.35, 1 - gesto.dy / 320));
+    });
+
+    cabecera.addEventListener("pointerup", soltar);
+    cabecera.addEventListener("pointercancel", soltar);
+}
+
+function setFontPanel(abierto) {
+    document.querySelector("#fontPanel").hidden = !abierto;
+}
+
+
 function setFilter(filter) {
     activeFilter = filter;
     document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.filter === filter));
@@ -2983,6 +3053,17 @@ document.querySelector("#recorteFoto").addEventListener("click", (event) => {
     if (event.target.id === "recorteFoto") cerrarRecorte();
 });
 document.querySelector("#closeProfilePanel").addEventListener("click", () => setProfilePanel(false));
+
+document.querySelector("#abrirFontPanel").addEventListener("click", () => setFontPanel(true));
+document.querySelector("#cerrarFontPanel").addEventListener("click", () => setFontPanel(false));
+document.querySelector("#fontPanel").addEventListener("click", (event) => {
+    if (event.target.id === "fontPanel") setFontPanel(false);
+});
+
+permitirCierreDeslizando(document.querySelector("#appPanel"), () => setAppPanel(false));
+permitirCierreDeslizando(document.querySelector("#profilePanel"), () => setProfilePanel(false));
+permitirCierreDeslizando(document.querySelector("#notePanel"), () => setCustomizePanel(false));
+permitirCierreDeslizando(document.querySelector("#fontPanel .panel-centrado-caja"), () => setFontPanel(false));
 document.querySelector(".customize-sidebar").addEventListener("click", openAppPanel);
 document.querySelector("#closeAppPanel").addEventListener("click", () => setAppPanel(false));
 

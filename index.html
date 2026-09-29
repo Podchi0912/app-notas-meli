@@ -576,6 +576,7 @@
     <aside class="float-panel app-panel" id="appPanel">
 
         <div class="customize-header">
+            <div class="sheet-grip" aria-hidden="true"></div>
             <h3>Personalizar mi cuaderno</h3>
             <button id="closeAppPanel" type="button" aria-label="Cerrar">×</button>
         </div>
@@ -595,10 +596,14 @@
 
         <!-- Solo en móvil: colocarGraduador() trae aquí el control .font-scale
              de la barra superior, donde competía con acciones más frecuentes. -->
+        <!-- Solo en móvil. El graduador se saca a su propia ventanita: dentro
+             de esta hoja, que ocupa media pantalla, no se veía el efecto de lo
+             que se estaba graduando. -->
         <div class="custom-section solo-movil" id="panelFontSection">
-            <h4>Tamaño de la letra</h4>
-            <div id="panelFontSlot"></div>
-            <p class="custom-hint">Afecta a toda la página, no al tamaño de cada nota.</p>
+            <button type="button" class="panel-boton" id="abrirFontPanel">
+                <span aria-hidden="true">Aa</span>
+                Tamaño de la letra
+            </button>
         </div>
 
     </aside>
@@ -609,6 +614,7 @@
     <aside class="float-panel profile-panel" id="profilePanel">
 
         <div class="customize-header">
+            <div class="sheet-grip" aria-hidden="true"></div>
             <h3>Mi perfil</h3>
             <button id="closeProfilePanel" type="button" aria-label="Cerrar">×</button>
         </div>
@@ -652,6 +658,7 @@
     <aside class="float-panel note-panel" id="notePanel">
 
         <div class="customize-header">
+            <div class="sheet-grip" aria-hidden="true"></div>
 
             <h3>Personalizar nota</h3>
 
@@ -808,6 +815,28 @@
     <div class="fastener-colors" id="fastenerColors"></div>
     <p class="fastener-hint">Arrástrala para ponerla donde quieras.</p>
     <button type="button" class="fastener-reset" id="fastenerReset" hidden>↺ Devolver a su sitio</button>
+</div>
+
+<!-- TAMAÑO DE LA LETRA (solo móvil). En medio de la pantalla y pequeña, para
+     que se vea la página cambiar de tamaño por detrás mientras se gradúa. -->
+<div class="panel-centrado" id="fontPanel" role="dialog" aria-modal="true" aria-labelledby="fontPanelTitulo" hidden>
+
+    <div class="panel-centrado-caja">
+
+        <div class="customize-header">
+            <div class="sheet-grip" aria-hidden="true"></div>
+            <h3 id="fontPanelTitulo">Tamaño de la letra</h3>
+            <button id="cerrarFontPanel" type="button" aria-label="Cerrar">×</button>
+        </div>
+
+        <!-- colocarGraduador() trae aquí el control .font-scale de la barra
+             de arriba, que en móvil no cabe. -->
+        <div id="panelFontSlot"></div>
+
+        <p class="custom-hint">Afecta a toda la página, no al tamaño de cada nota.</p>
+
+    </div>
+
 </div>
 
 <!-- COLOCAR LA FOTO DEL AVATAR. Se abre al elegir una imagen: antes la página

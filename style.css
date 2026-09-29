@@ -3990,6 +3990,116 @@ button.calendar-day.is-selected:hover {
     font-size: 0.875rem;
 }
 
+/* VENTANITA CENTRADA (tamaño de la letra) */
+
+.panel-centrado {
+    display: flex;
+
+    position: fixed;
+    inset: 0;
+
+    z-index: 90;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 16px;
+
+    background: rgba(31, 22, 25, 0.5);
+}
+
+.panel-centrado-caja {
+    width: min(320px, 100%);
+
+    border: 1px solid var(--border);
+    border-radius: var(--panel-radius, 22px);
+
+    padding: 4px 18px 18px;
+
+    background: var(--paper);
+
+    box-shadow: var(--sidebar-shadow);
+}
+
+/* La cabecera aquí no se desplaza con nada: sobra el pegado */
+.panel-centrado-caja .customize-header {
+    position: static;
+
+    padding-bottom: 12px;
+
+    margin-bottom: 14px;
+}
+
+/* Botón de una sección que abre otra cosa */
+.panel-boton {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 9px;
+
+    width: 100%;
+
+    height: 42px;
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    background: var(--background);
+
+    color: var(--text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.8125rem;
+}
+
+.panel-boton:hover {
+    background: color-mix(in srgb, var(--coral) 14%, var(--background));
+}
+
+/* Los botones del graduador solo estaban vestidos dentro de la barra de
+   arriba; al mudarse aquí salían desnudos y diminutos para un dedo. */
+#fontPanel .font-scale {
+    gap: 6px;
+
+    padding: 6px;
+
+    border-radius: 12px;
+}
+
+#fontPanel .font-scale button {
+    flex: 1;
+
+    height: 46px;
+
+    border-radius: 9px;
+
+    background: var(--background);
+
+    color: var(--text);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.9375rem;
+
+    line-height: 1;
+}
+
+#fontPanel #fontScaleValue {
+    flex: 1.4;
+
+    background: color-mix(in srgb, var(--coral) 18%, var(--background));
+}
+
+#fontPanel .font-scale button:disabled {
+    opacity: 0.35;
+
+    cursor: default;
+}
+
+
 /* COLOCAR LA FOTO DEL AVATAR */
 
 .recorte {
@@ -4495,6 +4605,14 @@ html.sin-entrar .pantalla-entrada {
     padding-bottom: 17px;
 
     margin-bottom: 15px;
+}
+
+/* Tirador de las hojas. Vive dentro de la cabecera, no suelto encima, porque
+   la cabecera es la zona que se arrastra para cerrar: tirador y zona activa
+   tienen que ser lo mismo o se tira de donde no responde. En el escritorio
+   estos paneles no son hojas y no hay nada que arrastrar. */
+.sheet-grip {
+    display: none;
 }
 
 .customize-header h3 {
@@ -5335,17 +5453,6 @@ html.sin-entrar .pantalla-entrada {
         aspect-ratio: 1;
     }
 
-    /* Tirador */
-    .float-panel::before {
-        content: "";
-        display: block;
-        width: 40px;
-        height: 4px;
-        margin: 10px auto 2px;
-        border-radius: 2px;
-        background: rgba(75, 66, 55, 0.25);
-    }
-
     .float-panel.is-open {
         animation: sheet-up 0.22s ease-out;
     }
@@ -5356,7 +5463,47 @@ html.sin-entrar .pantalla-entrada {
         top: 0;
         z-index: 2;
         background: inherit;
-        padding-top: 8px;
+        padding-top: 4px;
+
+        flex-wrap: wrap;
+
+        /* El dedo que empieza aquí arrastra la hoja, no la desplaza por dentro.
+           Sin esto el navegador tiene que adivinar cuál de las dos cosas se
+           quiere, y se queda con el desplazamiento. */
+        touch-action: none;
+    }
+
+    .sheet-grip {
+        display: block;
+
+        position: relative;
+
+        /* Ocupa su propia línea encima del título */
+        flex: 0 0 100%;
+
+        /* Alto generoso aunque la barrita sea fina: es lo que se agarra */
+        height: 14px;
+
+        margin-bottom: 2px;
+    }
+
+    .sheet-grip::after {
+        content: "";
+
+        position: absolute;
+
+        left: 50%;
+        top: 5px;
+
+        translate: -50% 0;
+
+        width: 40px;
+        height: 4px;
+
+        border-radius: 2px;
+
+        /* Sigue al tema: en oscuro, el gris fijo de antes no se veía */
+        background: color-mix(in srgb, var(--text) 28%, transparent);
     }
 
     .apply-button {
