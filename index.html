@@ -10,9 +10,60 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Handlee&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script>
+// Puerta de entrada. Se decide aquí, con lo que haya guardado en el aparato,
+// sin preguntarle a nadie: así también se entra sin internet. Si el token
+// resultara estar caducado, nube.js lo descubre luego y vuelve a cerrar.
+(function () {
+    var hayNube = window.CONFIG_NUBE && window.CONFIG_NUBE.url && window.CONFIG_NUBE.clave;
+    var haySesion = false;
+    var ajustes = {};
+    try {
+        haySesion = Boolean(localStorage.getItem("mi-cuadernito-sesion"));
+        ajustes = JSON.parse(localStorage.getItem("mi-cuadernito-settings") || "{}");
+    } catch (error) {
+        /* navegador sin almacenamiento: se queda en la pantalla de entrar */
+    }
+    if (hayNube && !haySesion) document.documentElement.classList.add("sin-entrar");
+    // El tema se aplica al final del guion principal; sin esto, quien tenga el
+    // modo oscuro ve un destello blanco antes de que llegue.
+    if (ajustes.darkMode) document.documentElement.style.background = "#1E1619";
+})();
+</script>
 </head>
 
 <body>
+
+<!-- PANTALLA DE ENTRADA. Es lo único que se ve hasta que hay sesión; el CSS
+     esconde todo lo demás mientras <html> lleve la clase sin-entrar. -->
+<div class="pantalla-entrada" id="pantallaEntrada">
+
+    <div class="entrada-caja">
+
+        <img class="entrada-logo" src="img/logo-400.png" alt="" width="132" height="132" decoding="async">
+
+        <h1>Mi Cuadernito</h1>
+        <p class="entrada-sub">Entra para ver tus notas.</p>
+
+        <form class="cuenta-form" id="cuentaForm">
+            <!-- autocomplete en condiciones para que el navegador ofrezca
+                 guardar la contraseña: así solo se escribe la primera vez -->
+            <input id="cuentaCorreo" type="email" autocomplete="username" inputmode="email"
+                   placeholder="tu@correo.com" aria-label="Tu correo" required>
+            <input id="cuentaClave" type="password" autocomplete="current-password"
+                   placeholder="Contraseña" aria-label="Contraseña">
+            <div class="cuenta-form-botones">
+                <button type="submit" id="cuentaEntrar">Entrar</button>
+                <button type="button" id="cuentaEnlace">Prefiero un enlace al correo</button>
+            </div>
+        </form>
+
+        <p class="custom-hint" id="cuentaPista">Entra con tu correo y tu contraseña. Solo hace falta una vez en cada aparato: después se queda entrada.</p>
+
+    </div>
+
+</div>
 
 <div class="app">
 
@@ -588,25 +639,12 @@
 
             <p class="cuenta-estado" id="cuentaEstado">Solo en este aparato</p>
 
-            <form class="cuenta-form" id="cuentaForm" hidden>
-                <!-- autocomplete en condiciones para que el navegador ofrezca
-                     guardar la contraseña: así solo se escribe la primera vez -->
-                <input id="cuentaCorreo" type="email" autocomplete="username" inputmode="email"
-                       placeholder="tu@correo.com" aria-label="Tu correo" required>
-                <input id="cuentaClave" type="password" autocomplete="current-password"
-                       placeholder="Contraseña" aria-label="Contraseña">
-                <div class="cuenta-form-botones">
-                    <button type="submit" id="cuentaEntrar">Entrar</button>
-                    <button type="button" id="cuentaEnlace">Prefiero un enlace al correo</button>
-                </div>
-            </form>
-
             <div class="cuenta-acciones" id="cuentaAcciones" hidden>
                 <button type="button" id="cuentaSincronizar">↻ Sincronizar ahora</button>
                 <button type="button" id="cuentaSalir">Cerrar sesión</button>
             </div>
 
-            <p class="custom-hint" id="cuentaPista">Entra con tu correo y tu contraseña.</p>
+            <p class="custom-hint" id="cuentaDetalle"></p>
         </div>
 
     </aside>
@@ -791,7 +829,6 @@
     </form>
 </dialog>
 
-<script src="config.js"></script>
 <script src="script.js"></script>
 <script src="nube.js"></script>
 </body>

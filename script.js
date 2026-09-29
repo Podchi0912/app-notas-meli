@@ -3186,6 +3186,31 @@ window.Cuadernito = {
         if (!escribiendo) renderEditor();
     },
 
+    // Entra otra persona en este mismo navegador. El cuaderno que hay aquí es
+    // del anterior y ya está guardado en SU nube; si se dejara, la primera
+    // sincronización lo subiría a la cuenta nueva y se mezclarían los dos.
+    vaciar() {
+        notes = seedNotes();
+        categories = seedCategories();
+        reminders = [];
+        settings = {};
+        activeNoteId = notes.find((note) => !note.deleted)?.id || null;
+
+        persistNotes();
+        persistCategories();
+        persistReminders();
+        persistSettings();
+
+        applySettings();
+        renderCategories();
+        renderFilterPicker();
+        renderCalendar();
+        renderReminders();
+        renderCounts();
+        renderCards();
+        renderEditor();
+    },
+
     // Vuelve del enlace del correo: que vea en qué quedó la cosa
     abrirCuenta() {
         openProfilePanel();

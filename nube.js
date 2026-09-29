@@ -60,6 +60,7 @@
     const botonSalir = document.querySelector("#cuentaSalir");
     const botonAhora = document.querySelector("#cuentaSincronizar");
     const pista = document.querySelector("#cuentaPista");
+    const detalle = document.querySelector("#cuentaDetalle");
 
     let sesion = leerJson(SESION_KEY, null);
     let meta = leerJson(SINCRO_KEY, null) || metaVacia();
@@ -564,22 +565,26 @@
     }
 
     function pintar() {
+        // Sin nube configurada no hay puerta que valga: el cuaderno funciona
+        // igual guardando solo aquí, y dejarlo cerrado sería dejarlo inservible.
+        if (HAY_NUBE) document.documentElement.classList.toggle("sin-entrar", !sesion);
+
         if (!cajaEstado) return;
 
         if (!HAY_NUBE) {
             cajaEstado.textContent = "Guardando solo en este aparato";
             cajaEstado.className = "cuenta-estado";
-            if (formulario) formulario.hidden = true;
             if (acciones) acciones.hidden = true;
-            if (pista) pista.textContent = "Falta rellenar config.js para usar la nube.";
+            if (detalle) detalle.textContent = "Falta rellenar config.js para usar la nube.";
             return;
         }
 
-        if (formulario) formulario.hidden = Boolean(sesion);
         if (acciones) acciones.hidden = !sesion;
 
         if (!sesion) {
-            cajaEstado.textContent = "Solo en este aparato";
+            // El panel está detrás de la puerta y no se ve; lo que se lee es la
+            // pista de la pantalla de entrada.
+            cajaEstado.textContent = "Sin entrar";
             cajaEstado.className = "cuenta-estado";
             if (pista) {
                 pista.textContent = aviso
@@ -608,11 +613,11 @@
 
         cajaEstado.textContent = texto;
         cajaEstado.className = clase;
-        if (pista) {
-            pista.textContent = avisoMalo && aviso
+        if (detalle) {
+            detalle.textContent = avisoMalo && aviso
                 ? aviso
                 : (sesion.correo || "") + " · tus notas también se guardan en la nube.";
-            pista.classList.toggle("cuenta-mal", avisoMalo);
+            detalle.classList.toggle("cuenta-mal", avisoMalo);
         }
     }
 
@@ -647,6 +652,11 @@
             ocupado(botonEntrar, "Entrando…");
             try {
                 await entrarConClave(correo, secreto);
+                if (meta.usuario && meta.usuario !== sesion.usuario && app.vaciar) {
+                    app.vaciar();
+                    meta = metaVacia();
+                    guardarMeta();
+                }
                 if (campoClave) campoClave.value = "";
                 aviso = "";
                 avisoMalo = false;
@@ -686,7 +696,7 @@
 
     if (botonSalir) {
         botonSalir.addEventListener("click", () => {
-            if (!confirm("¿Cerrar sesión? Tus notas seguirán en este aparato y en la nube.")) return;
+            if (!confirm("¿Cerrar sesión? Volverás a la pantalla de entrada. Tus notas siguen en la nube y en este aparato.")) return;
             aviso = "";
             avisoMalo = false;
             salir();

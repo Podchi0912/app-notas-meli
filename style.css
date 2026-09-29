@@ -3980,6 +3980,95 @@ button.calendar-day.is-selected:hover {
     font-size: 0.875rem;
 }
 
+/* PANTALLA DE ENTRADA */
+
+.pantalla-entrada {
+    display: none;
+}
+
+/* Mientras no haya sesión, lo único que existe es la pantalla de entrada.
+   Se esconde por hermanos y no por una lista de piezas: así nada nuevo que se
+   añada mañana al cuaderno se queda asomando por descuido. */
+html.sin-entrar body > *:not(.pantalla-entrada) {
+    display: none !important;
+}
+
+html.sin-entrar .pantalla-entrada {
+    display: flex;
+}
+
+.pantalla-entrada {
+    align-items: center;
+
+    justify-content: center;
+
+    /* dvh y no vh: en el móvil, vh cuenta la barra del navegador y la caja
+       quedaba centrada respecto a un alto que no existe. */
+    min-height: 100dvh;
+
+    padding: 24px 16px;
+
+    background: var(--background);
+}
+
+.entrada-caja {
+    width: min(360px, 100%);
+
+    border: 1px solid var(--border);
+    border-radius: var(--panel-radius, 22px);
+
+    padding: 26px 22px 22px;
+
+    background: var(--paper);
+
+    box-shadow: var(--sidebar-shadow);
+
+    text-align: center;
+}
+
+.entrada-logo {
+    width: 132px;
+    height: 132px;
+
+    margin-bottom: 6px;
+
+    /* El logo es transparente y la palabra "Cuadernito" va en marrón oscuro:
+       sobre el panel en modo oscuro desaparecía. El disco crema hace de papel,
+       igual que la nube que lleva detrás en el lateral. */
+    border-radius: 50%;
+
+    background: var(--logo-halo, #F7E7D8);
+}
+
+.entrada-caja h1 {
+    font-size: 1.5rem;
+
+    color: var(--plum);
+}
+
+.entrada-sub {
+    margin: 4px 0 18px;
+
+    font-size: 0.8125rem;
+
+    color: var(--muted);
+}
+
+/* Dentro de la caja el formulario ya no es un apartado más de un panel: los
+   campos respiran y el texto de abajo se centra con el resto. */
+.entrada-caja .cuenta-form {
+    gap: 9px;
+
+    text-align: left;
+}
+
+.entrada-caja .custom-hint {
+    margin-top: 14px;
+
+    text-align: center;
+}
+
+
 /* CUENTA EN LA NUBE */
 
 .cuenta-estado {
