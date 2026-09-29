@@ -188,9 +188,18 @@
         const respuesta = await fetch(API + "/auth/v1/otp?redirect_to=" + encodeURIComponent(destino), {
             method: "POST",
             headers: { apikey: CLAVE, "Content-Type": "application/json" },
-            body: JSON.stringify({ email: correo, create_user: true })
+            // create_user en false: este botón es para volver a entrar, nunca para
+            // darse de alta. Con true, cualquiera que abriese la página podría
+            // crearse una cuenta dentro del proyecto solo con poner su correo.
+            body: JSON.stringify({ email: correo, create_user: false })
         });
-        if (!respuesta.ok) throw new Error(await textoDelError(respuesta));
+        if (!respuesta.ok) {
+            const detalle = await textoDelError(respuesta);
+            if (/signup|not found|disabled/i.test(detalle)) {
+                throw new Error("Ese correo no tiene cuenta en este cuaderno.");
+            }
+            throw new Error(detalle);
+        }
     }
 
     // El enlace del correo devuelve a la página con las llaves detrás de #.
