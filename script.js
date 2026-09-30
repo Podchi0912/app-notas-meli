@@ -2825,6 +2825,78 @@ notesGrid.addEventListener("pointerdown", (event) => {
     }
 });
 
+/* Devuelve una función que, dado un punto de la pantalla, da la posición más
+   cercana donde se puede dejar la sujeción, en % del envoltorio (que es contra
+   lo que se escriben left y top).
+
+   El recinto es la TARJETA, no el envoltorio: el envoltorio reserva 12px por
+   encima para la cabeza de la tachuela, y medir contra él dejaba soltarla en
+   ese hueco, flotando fuera del papel.
+
+   Se guarda medio botón de margen por todos lados, así lo que topa con el
+   borde es el canto de la tachuela y no su centro. Y se respetan las esquinas
+   redondeadas: en las puntas, el rectángulo que envuelve a la tarjeta sobra, y
+   con solo recortar por el rectángulo la tachuela se quedaba en la esquina
+   pareciendo que flotaba fuera del papel.
+
+   Se usa offsetWidth y no el rectángulo porque la tachuela crece un poco al
+   pasar el ratón, y esa escala no debe cambiar dónde se la deja soltar. */
+function ajustadorSujecion(a) {
+    const tarjeta = a.envoltorio.querySelector(".note-card");
+    if (!tarjeta) return (px, py) => ({ x: enPorciento(a, px, "x"), y: enPorciento(a, py, "y") });
+
+    const caja = tarjeta.getBoundingClientRect();
+    const margen = Math.max(a.boton.offsetWidth, a.boton.offsetHeight) / 2;
+    const radio = parseFloat(getComputedStyle(tarjeta).borderTopLeftRadius) || 0;
+
+    let x0 = caja.left + margen;
+    let x1 = caja.right - margen;
+    let y0 = caja.top + margen;
+    let y1 = caja.bottom - margen;
+    // Una tarjeta más pequeña que su propia tachuela no debería existir, pero
+    // si pasara los topes saldrían cruzados: se deja en el centro.
+    if (x0 > x1) x0 = x1 = (caja.left + caja.right) / 2;
+    if (y0 > y1) y0 = y1 = (caja.top + caja.bottom) / 2;
+
+    // Al meter el recinto hacia dentro, la curva de la esquina se cierra otro
+    // tanto; y nunca puede pasar de la mitad del lado más corto.
+    const curva = Math.max(0, Math.min(radio - margen, Math.min(x1 - x0, y1 - y0) / 2));
+
+    return function (px, py) {
+        let x = Math.min(x1, Math.max(x0, px));
+        let y = Math.min(y1, Math.max(y0, py));
+
+        const esquinas = [
+            [x0 + curva, y0 + curva, x < x0 + curva && y < y0 + curva],
+            [x1 - curva, y0 + curva, x > x1 - curva && y < y0 + curva],
+            [x0 + curva, y1 - curva, x < x0 + curva && y > y1 - curva],
+            [x1 - curva, y1 - curva, x > x1 - curva && y > y1 - curva]
+        ];
+        for (let i = 0; i < esquinas.length; i++) {
+            const [cx, cy, dentroDeLaPunta] = esquinas[i];
+            if (!dentroDeLaPunta) continue;
+            const dx = x - cx;
+            const dy = y - cy;
+            const distancia = Math.hypot(dx, dy);
+            // Fuera del arco: se devuelve al borde curvo, por el camino corto
+            if (distancia > curva && distancia > 0) {
+                x = cx + (dx / distancia) * curva;
+                y = cy + (dy / distancia) * curva;
+            }
+            break;
+        }
+
+        return { x: enPorciento(a, x, "x"), y: enPorciento(a, y, "y") };
+    };
+}
+
+// De píxeles de pantalla a % del envoltorio
+function enPorciento(a, valor, eje) {
+    return eje === "x"
+        ? ((valor - a.caja.left) / a.caja.width) * 100
+        : ((valor - a.caja.top) / a.caja.height) * 100;
+}
+
 notesGrid.addEventListener("pointermove", (event) => {
     const a = arrastreSujecion;
     if (!a || event.pointerId !== a.puntero) return;
@@ -2836,11 +2908,11 @@ notesGrid.addEventListener("pointermove", (event) => {
         // del dedo no coincidiría con la de la tarjeta girada.
         a.envoltorio.classList.add("moviendo-sujecion");
         a.caja = a.envoltorio.getBoundingClientRect();
+        a.ajustar = ajustadorSujecion(a);
     }
-    // Siempre dentro de la tarjeta (con el borde de arriba incluido), para
-    // que nunca acabe fuera de alcance.
-    a.x = Math.min(97, Math.max(3, ((event.clientX - a.caja.left) / a.caja.width) * 100));
-    a.y = Math.min(97, Math.max(0, ((event.clientY - a.caja.top) / a.caja.height) * 100));
+    const sitio = a.ajustar(event.clientX, event.clientY);
+    a.x = sitio.x;
+    a.y = sitio.y;
     aplicarPosicionSujecion(a.boton, a.envoltorio, a.x, a.y);
 });
 
