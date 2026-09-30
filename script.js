@@ -2833,34 +2833,29 @@ notesGrid.addEventListener("pointerdown", (event) => {
    encima para la cabeza de la tachuela, y medir contra él dejaba soltarla en
    ese hueco, flotando fuera del papel.
 
-   Se guarda medio botón de margen por todos lados, así lo que topa con el
-   borde es el canto de la tachuela y no su centro. Y se respetan las esquinas
-   redondeadas: en las puntas, el rectángulo que envuelve a la tarjeta sobra, y
-   con solo recortar por el rectángulo la tachuela se quedaba en la esquina
-   pareciendo que flotaba fuera del papel.
+   Lo que se recorta es el CENTRO de la sujeción, no su canto: apoyado en el
+   borde, la tachuela asoma justo la mitad, que es como muerde el papel un
+   clip de verdad (y es exactamente lo que hace en su posición de partida,
+   asomando por arriba). Metiéndola entera dentro parecía pegada encima del
+   papel en vez de sujetarlo.
 
-   Se usa offsetWidth y no el rectángulo porque la tachuela crece un poco al
-   pasar el ratón, y esa escala no debe cambiar dónde se la deja soltar. */
+   Y se respetan las esquinas redondeadas: en las puntas el rectángulo que
+   envuelve a la tarjeta sobra, y recortando solo por él la tachuela se
+   quedaba fuera del papel de verdad, flotando en el aire. */
 function ajustadorSujecion(a) {
     const tarjeta = a.envoltorio.querySelector(".note-card");
     if (!tarjeta) return (px, py) => ({ x: enPorciento(a, px, "x"), y: enPorciento(a, py, "y") });
 
     const caja = tarjeta.getBoundingClientRect();
-    const margen = Math.max(a.boton.offsetWidth, a.boton.offsetHeight) / 2;
     const radio = parseFloat(getComputedStyle(tarjeta).borderTopLeftRadius) || 0;
 
-    let x0 = caja.left + margen;
-    let x1 = caja.right - margen;
-    let y0 = caja.top + margen;
-    let y1 = caja.bottom - margen;
-    // Una tarjeta más pequeña que su propia tachuela no debería existir, pero
-    // si pasara los topes saldrían cruzados: se deja en el centro.
-    if (x0 > x1) x0 = x1 = (caja.left + caja.right) / 2;
-    if (y0 > y1) y0 = y1 = (caja.top + caja.bottom) / 2;
+    const x0 = caja.left;
+    const x1 = caja.right;
+    const y0 = caja.top;
+    const y1 = caja.bottom;
 
-    // Al meter el recinto hacia dentro, la curva de la esquina se cierra otro
-    // tanto; y nunca puede pasar de la mitad del lado más corto.
-    const curva = Math.max(0, Math.min(radio - margen, Math.min(x1 - x0, y1 - y0) / 2));
+    // La curva no puede pasar de la mitad del lado más corto
+    const curva = Math.max(0, Math.min(radio, Math.min(x1 - x0, y1 - y0) / 2));
 
     return function (px, py) {
         let x = Math.min(x1, Math.max(x0, px));
