@@ -37,7 +37,7 @@ const NOTE_TYPES = [
 const EXPORT_VERSION = 3;
 
 // Valores por defecto que usa el renderizador cuando falta la personalización.
-// Debe declararse antes de loadNotes(): seedNotes() lo usa en el primer arranque.
+// Los rellena en las notas viejas, que se guardaron antes de que existieran.
 const DEFAULT_CUSTOMIZATION = {
     color: "pink",
     background: "plain",
@@ -507,69 +507,6 @@ function categoryLabel(category) {
     return category.icon ? `${category.icon} ${category.name}` : category.name;
 }
 
-function seedNotes() {
-    // Cada nota estrena una combinación distinta para que la app se vea como el
-    // diseño original y se entienda de un vistazo que todo es personalizable.
-    const seeds = [
-        {
-            type: "receta",
-            title: "Pasta con tomate cherry 🍅",
-            content: "<h2>Ingredientes</h2><ul><li>250g de pasta</li><li>1 taza de tomates cherry</li><li>2 dientes de ajo</li><li>Aceite de oliva</li><li>Sal y pimienta al gusto</li></ul><h2>Preparación</h2><ol><li>Cocina la pasta según el paquete.</li><li>Sofríe el ajo en aceite de oliva.</li><li>Agrega los tomates y cocina 5 minutos.</li><li>Mezcla con la pasta y salpimienta.</li></ol>",
-            daysAgo: 0,
-            customization: { color: "coral", background: "lines", style: "paper", decoration: "🍓" }
-        },
-        {
-            type: "lista",
-            title: "Compra semanal",
-            content: "<h2>Lista</h2><ul><li>Leche</li><li>Huevos</li><li>Pan integral</li><li>Tomates</li><li>Queso</li><li>Café</li></ul>",
-            daysAgo: 1,
-            categoryId: "casa",
-            customization: { color: "pink", background: "dots", style: "post-it", decoration: "⭐" }
-        },
-        {
-            type: "nota",
-            title: "Ideas para el blog",
-            content: "<p>Escribir sobre mis recetas favoritas, organización del hogar y hábitos saludables.</p>",
-            daysAgo: 3,
-            categoryId: "trabajo",
-            customization: { color: "beige", background: "plain", style: "card", decoration: "🌸" }
-        },
-        {
-            type: "idea",
-            title: "Viaje a Italia 🇮🇹",
-            content: "<h2>Lugares</h2><ul><li>Roma</li><li>Florencia</li><li>Venecia</li><li>Costa Amalfitana</li></ul>",
-            daysAgo: 6,
-            categoryId: "viajes",
-            customization: { color: "mauve", background: "grid", style: "journal", decoration: "☁️" }
-        }
-    ];
-
-    // Fechas escalonadas para que el calendario nazca con varios días marcados.
-    const dateFrom = (daysAgo) => {
-        const date = new Date();
-        date.setDate(date.getDate() - daysAgo);
-        return date.toISOString();
-    };
-
-    return seeds.map((seed) => ({
-        id: crypto.randomUUID(),
-        type: seed.type,
-        title: seed.title,
-        content: seed.content,
-        categoryId: seed.categoryId || null,
-        favorite: false,
-        archived: false,
-        deleted: false,
-        customization: { ...DEFAULT_CUSTOMIZATION, ...seed.customization },
-        updatedAt: dateFrom(seed.daysAgo),
-        // Marca de "esto lo puso la página, no ella". Sirve al entrar en la
-        // cuenta desde un aparato nuevo: estas notas de muestra se descartan
-        // para no mezclarlas con el cuaderno de verdad. tocarNota() borra la
-        // marca en cuanto se edita la nota, y entonces ya no se descarta.
-        semilla: true
-    }));
-}
-
 // Hasta la v2, `category` guardaba el nombre del tipo ("Recetas") y no lo
 // elegía nadie: era una copia de `type`. La categoría de verdad es ahora
 // `categoryId`, así que al cargar se descarta el campo viejo.
@@ -607,12 +544,15 @@ function extraerPegatinasDelTexto(note) {
     return note;
 }
 
+// Sin nada guardado, el cuaderno empieza vacío: la rejilla enseña su "aquí no
+// hay nada todavía" y la primera nota la escribe quien llega. Antes la página
+// se inventaba cinco de ejemplo, que había que borrar una a una.
 function loadNotes() {
     try {
         const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        return Array.isArray(stored) ? stored.map(migrateNote) : seedNotes();
+        return Array.isArray(stored) ? stored.map(migrateNote) : [];
     } catch {
-        return seedNotes();
+        return [];
     }
 }
 
@@ -633,9 +573,10 @@ function loadReminders() {
     }
 }
 
-// Sella la nota como recién tocada por ella. De paso deja de ser una nota de
-// ejemplo: las de ejemplo se descartan al entrar en la cuenta desde un aparato
-// nuevo, y lo que ella haya escrito no debe irse con ellas.
+// Sella la nota como recién tocada. De paso le quita la marca de nota de
+// ejemplo, que ya no se reparte a nadie pero sigue puesta en los aparatos que
+// las recibieron antes: al entrar en una cuenta que ya tiene cuaderno, esas se
+// descartan, y lo que se haya escrito encima no debe irse con ellas.
 function tocarNota(note) {
     note.updatedAt = new Date().toISOString();
     delete note.semilla;
@@ -3454,7 +3395,7 @@ window.Cuadernito = {
     // del anterior y ya está guardado en SU nube; si se dejara, la primera
     // sincronización lo subiría a la cuenta nueva y se mezclarían los dos.
     vaciar() {
-        notes = seedNotes();
+        notes = [];
         categories = seedCategories();
         reminders = [];
         settings = {};
