@@ -643,7 +643,7 @@
         aviso = "";
         avisoMalo = false;
 
-        titulo.textContent = registro ? "Crea tu cuaderno" : "Mi Cuadernito";
+        titulo.textContent = registro ? "Crea tu cuaderno" : "Bienvenido";
         subtitulo.textContent = registro
             ? "Tus notas serán solo tuyas."
             : "Entra para ver tus notas.";
