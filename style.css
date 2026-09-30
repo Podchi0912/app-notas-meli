@@ -1756,7 +1756,39 @@ body.dark-mode .icon-moon {
     filter: drop-shadow(0 1px 1.5px rgba(60, 40, 30, 0.28));
 }
 
-.note-pinned--pin .note-fastener-btn {
+/* Copia de la sujeción que va DETRÁS del papel. Lo que asoma por fuera del
+   borde se ve; lo que cae sobre la hoja queda tapado. Es lo que hace que el
+   clip parezca agarrar el papel en vez de estar pegado encima. */
+.note-fastener-detras {
+    position: absolute;
+    z-index: 0;
+
+    /* No se toca ni se pulsa: el que responde es el botón de delante */
+    pointer-events: none;
+
+    /* La misma transición que el botón. Sin ella, al agrandarse el botón
+       poco a poco y la copia de golpe, el clip se partía en dos mitades
+       desencajadas durante ese mismo momento. */
+    transition: scale 0.15s;
+}
+
+/* Crece con el botón, o al pasar el ratón las dos mitades se desencajarían */
+.note-pinned:has(.note-fastener-btn:hover) .note-fastener-detras {
+    scale: 1.14;
+}
+
+.moviendo-sujecion .note-fastener-detras {
+    scale: 1.2;
+}
+
+/* El brazo de atrás solo desaparece cuando el clip está montado en un borde:
+   suelto en mitad de la hoja se vería medio clip flotando. */
+.note-pinned--clip.al-borde .note-fastener-btn .clip-brazo-trasero {
+    display: none;
+}
+
+.note-pinned--pin .note-fastener-btn,
+.note-pinned--pin .note-fastener-detras {
     top: 0;
     left: 50%;
 
@@ -1768,7 +1800,8 @@ body.dark-mode .icon-moon {
 
 /* En la esquina de arriba a la DERECHA: a la izquierda tapaba el rótulo del
    tipo de nota ("RECETA", "NOTA"), que va justo ahí. */
-.note-pinned--clip .note-fastener-btn {
+.note-pinned--clip .note-fastener-btn,
+.note-pinned--clip .note-fastener-detras {
     top: -4px;
     right: 24px;
 
@@ -1779,7 +1812,8 @@ body.dark-mode .icon-moon {
 }
 
 /* La cinta cruza el borde de arriba, como un trozo de washi tape */
-.note-pinned--tape .note-fastener-btn {
+.note-pinned--tape .note-fastener-btn,
+.note-pinned--tape .note-fastener-detras {
     top: 1px;
     left: 50%;
 
@@ -1990,6 +2024,10 @@ body.dark-mode .icon-moon {
         rgba(75,66,55,0.08);
 
     position: relative;
+
+    /* Entre las dos capas de la sujeción: la copia de atrás va en 0 y el
+       botón en 2, así el papel tapa lo que tiene que tapar. */
+    z-index: 1;
 
     padding: 16px;
 

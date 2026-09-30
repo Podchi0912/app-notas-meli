@@ -1238,8 +1238,13 @@ const FASTENER_SVG = {
         <circle cx="14" cy="12.5" r="8" fill="none" stroke="rgba(0, 0, 0, 0.2)" stroke-width="1"/>
         <circle cx="11" cy="9.5" r="2.7" fill="#FFFFFF" opacity="0.55"/>
     </svg>`,
+    // Dos trazos en lugar de uno: el brazo de fuera y el de dentro. Juntos son
+    // la misma figura de siempre, pero por separado se puede mandar el de
+    // fuera por detrás del papel, que es como agarra un clip de verdad.
     clip: `<svg class="note-fastener" viewBox="0 0 20 46" aria-hidden="true">
-        <path d="M7 15v19a3.5 3.5 0 0 0 7 0V9.5a5.5 5.5 0 0 0-11 0V35.5a7.5 7.5 0 0 0 15 0V17"
+        <path class="clip-brazo-trasero" d="M14 9.5a5.5 5.5 0 0 0-11 0V35.5a7.5 7.5 0 0 0 15 0V17"
+              fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M7 15v19a3.5 3.5 0 0 0 7 0V9.5"
               fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
     </svg>`
 };
@@ -1289,12 +1294,18 @@ function noteFastener(note) {
 // el balanceo (al pasar el ratón o al deslizar) gira desde ese punto.
 // `translate` y no transform: el clip y la cinta ya van girados con transform.
 function aplicarPosicionSujecion(boton, envoltorio, x, y) {
-    boton.style.left = `${x}%`;
-    boton.style.top = `${y}%`;
-    boton.style.right = "auto";
-    boton.style.margin = "0";
-    boton.style.translate = "-50% -50%";
+    // La copia de atrás tiene que ir exactamente donde el botón, o el clip se
+    // vería partido en dos mitades desencajadas.
+    [boton, envoltorio.querySelector(".note-fastener-detras")].forEach((pieza) => {
+        if (!pieza) return;
+        pieza.style.left = `${x}%`;
+        pieza.style.top = `${y}%`;
+        pieza.style.right = "auto";
+        pieza.style.margin = "0";
+        pieza.style.translate = "-50% -50%";
+    });
     envoltorio.style.transformOrigin = `${x}% ${y}%`;
+    envoltorio.classList.toggle("al-borde", x <= 10 || x >= 90 || y <= 10 || y >= 90);
 }
 
 function noteAccent(note) {
@@ -1446,7 +1457,21 @@ function renderCards() {
             ? `left:${datosSujecion.x}%; top:${datosSujecion.y}%; right:auto; margin:0; translate:-50% -50%;`
             : "";
         const pivote = libre ? ` transform-origin: ${datosSujecion.x}% ${datosSujecion.y}%;` : "";
-        return `<div class="note-pinned note-pinned--${sujecion}" style="--pin-color: ${fastenerHex(note)};${pivote}">
+        // El brazo de atrás del clip solo debe esconderse cuando el clip está
+        // montado en un borde; suelto en mitad de la hoja se vería medio clip.
+        const alBorde = !libre
+            || datosSujecion.x <= 10 || datosSujecion.x >= 90
+            || datosSujecion.y <= 10 || datosSujecion.y >= 90;
+
+        // Copia por detrás del papel: es la que asoma por fuera del borde
+        // mientras el papel tapa el resto. Solo la lleva el clip; la tachuela
+        // se ve por delante (la cabeza) y la cinta va pegada encima.
+        const detras = sujecion === "clip"
+            ? `<span class="note-fastener-detras" aria-hidden="true" style="${estiloSujecion}">${FASTENER_SVG.clip}</span>`
+            : "";
+
+        return `<div class="note-pinned note-pinned--${sujecion}${alBorde ? " al-borde" : ""}" style="--pin-color: ${fastenerHex(note)};${pivote}">
+            ${detras}
             <button type="button" class="note-fastener-btn" data-fastener-id="${note.id}" style="${estiloSujecion}"
                     aria-label="Cambiar ${etiquetaSujecion} de «${escapeHtml(note.title)}»"
                     title="Pulsa para cambiarla · arrástrala para moverla">${FASTENER_SVG[sujecion]}</button>
