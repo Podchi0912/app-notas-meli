@@ -680,6 +680,9 @@ function openEditor() {
 }
 
 function closeEditor() {
+    // Mientras se escribía solo se retocaba la tarjeta; el calendario y los
+    // contadores pueden haberse quedado atrás, así que aquí se ponen al día.
+    renderCards();
     document.querySelector(".editor").classList.add("is-hidden");
     document.querySelector(".app").classList.remove("editor-open");
     document.body.classList.remove("editor-open");
@@ -1716,6 +1719,34 @@ function createNote(type, title, categoryId) {
     renderEditor();
 }
 
+/* Mientras se escribe, de la tarjeta solo cambian tres cosas: el título, el
+   resumen y la fecha. Rehacer la rejilla entera por cada pausa al teclear
+   salía carísimo: renderCards() vuelve a componer TODAS las tarjetas y, de
+   paso, vuelve a analizar el HTML de cada nota para sacar su resumen (con 30
+   notas son 30 análisis completos), y encima repinta el calendario, los
+   recordatorios, las categorías y los contadores, que al escribir no cambian.
+
+   Devuelve false cuando no puede hacerlo por lo corto: entonces se repinta
+   como siempre. */
+function refrescarTarjeta(note) {
+    // Con una búsqueda o un día filtrado, escribir puede sacar o meter la nota
+    // en la lista, y eso ya no es retocar: hay que recomponerla.
+    if (searchInput.value.trim() || activeDate) return false;
+
+    const tarjeta = notesGrid.querySelector(`[data-note-id="${note.id}"]`);
+    if (!tarjeta) return false;
+
+    const titulo = tarjeta.querySelector("h3");
+    const resumen = tarjeta.querySelector(".note-preview");
+    const fecha = tarjeta.querySelector(".note-meta span");
+    if (!titulo || !resumen) return false;
+
+    titulo.textContent = note.title;
+    resumen.innerHTML = sanitizeNoteHtml(note.content);
+    if (fecha) fecha.textContent = formatDate(note.updatedAt);
+    return true;
+}
+
 function saveActiveNote() {
     const note = getActiveNote();
     if (!note) return;
@@ -1726,7 +1757,7 @@ function saveActiveNote() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
         persistNotes();
-        renderCards();
+        if (!refrescarTarjeta(note)) renderCards();
     }, 250);
 }
 
@@ -2465,9 +2496,20 @@ const COMANDOS_CON_ESTADO = ["bold", "italic", "underline", "strikeThrough", "in
 // el navegador lo reinicia por su cuenta al llevar el cursor a un trozo sin
 // formato. Un botón que llevase su propia cuenta acabaría invertido, diciendo
 // "apagado" mientras el texto sale tachado.
+// Los botones de la barra están en el HTML y no se rehacen nunca, así que se
+// buscan una vez. Esto corría en cada tecla.
+let BOTONES_CON_ESTADO = null;
+
+function botonesConEstado() {
+    if (!BOTONES_CON_ESTADO) {
+        BOTONES_CON_ESTADO = Array.from(document.querySelectorAll("[data-command]"))
+            .filter((boton) => COMANDOS_CON_ESTADO.includes(boton.dataset.command));
+    }
+    return BOTONES_CON_ESTADO;
+}
+
 function renderToolbarState() {
-    document.querySelectorAll("[data-command]").forEach((boton) => {
-        if (!COMANDOS_CON_ESTADO.includes(boton.dataset.command)) return;
+    botonesConEstado().forEach((boton) => {
         let activo = false;
         try {
             activo = document.queryCommandState(boton.dataset.command);
@@ -2481,9 +2523,22 @@ function renderToolbarState() {
     });
 }
 
+// selectionchange se dispara varias veces por cada tecla (por el texto que
+// entra y por el cursor que se mueve), y cada repaso pregunta al navegador el
+// estado de seis comandos. Con una vez por fotograma se ve igual.
+let barraPendiente = false;
+
+function pedirEstadoBarra() {
+    if (barraPendiente) return;
+    barraPendiente = true;
+    requestAnimationFrame(() => {
+        barraPendiente = false;
+        renderToolbarState();
+    });
+}
+
 function clearCommandStates() {
-    document.querySelectorAll("[data-command]").forEach((boton) => {
-        if (!COMANDOS_CON_ESTADO.includes(boton.dataset.command)) return;
+    botonesConEstado().forEach((boton) => {
         boton.classList.remove("is-active");
         boton.setAttribute("aria-pressed", "false");
     });
@@ -2974,7 +3029,7 @@ document.querySelectorAll("[data-command]").forEach((button) => {
 document.addEventListener("selectionchange", () => {
     const seleccion = window.getSelection();
     if (seleccion && seleccion.rangeCount && editorContent.contains(seleccion.anchorNode)) {
-        renderToolbarState();
+        pedirEstadoBarra();
     }
 });
 document.querySelector("#closeEditor").addEventListener("click", closeEditor);

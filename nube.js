@@ -71,6 +71,8 @@
     let sincronizando = false;
     let repetir = false;
     let temporizador = null;
+    // Si hay una completa pendiente, una de solo subir no puede comérsela
+    let completaPendiente = false;
     let aviso = "";
     let avisoMalo = false;
     let creandoCuenta = false;
@@ -557,9 +559,20 @@
         }
     }
 
-    async function sincronizar() {
+    /* Escribir una nota no es motivo para preguntarle al servidor si hay algo
+       nuevo: lo único que hace falta es mandar lo que acaba de cambiar. Antes
+       cada pausa al teclear disparaba la vuelta entera —cuatro consultas más
+       el envío—, y escribiendo un rato eso son quince viajes en siete
+       segundos. Bajar se deja para el repaso de cada minuto, para cuando se
+       vuelve a la pestaña y para el botón de sincronizar a mano. */
+    async function sincronizar(opciones) {
+        const soloSubir = Boolean(opciones && opciones.soloSubir);
         if (!HAY_NUBE || !sesion) return;
-        if (sincronizando) { repetir = true; return; }
+        if (sincronizando) {
+            repetir = true;
+            if (!soloSubir) completaPendiente = true;
+            return;
+        }
         if (!navigator.onLine) { pintar(); return; }
 
         sincronizando = true;
@@ -571,7 +584,7 @@
             if (meta.usuario && meta.usuario !== sesion.usuario) meta = metaVacia();
 
             marcarSucios();
-            await bajar();
+            if (!soloSubir) await bajar();
             await subir();
 
             meta.usuario = sesion.usuario;
@@ -588,9 +601,14 @@
         }
     }
 
-    function programar(espera) {
+    function programar(espera, soloSubir) {
+        if (!soloSubir) completaPendiente = true;
         clearTimeout(temporizador);
-        temporizador = setTimeout(sincronizar, espera);
+        temporizador = setTimeout(() => {
+            const completa = completaPendiente;
+            completaPendiente = false;
+            sincronizar({ soloSubir: !completa });
+        }, espera);
     }
 
 
@@ -707,7 +725,8 @@
     if (!app) return;                 // script.js no llegó a cargar
 
     app.alCambiar = function () {
-        if (sesion) programar(1200);
+        // 2,5s en vez de 1,2: escribiendo, cada pausa corta disparaba un envío
+        if (sesion) programar(2500, true);
     };
 
     if (!HAY_NUBE) {
